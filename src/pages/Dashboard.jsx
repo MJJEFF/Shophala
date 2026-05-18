@@ -114,7 +114,7 @@ export default function Dashboard() {
     <div className="min-h-screen bg-black text-white">
       {/* Navbar */}
       <nav className="flex items-center justify-between px-6 md:px-12 py-5 border-b border-white/10">
-        <h1 className="text-xl font-bold">VendorFlow</h1>
+        <h1 className="text-xl font-bold">Wazobuy</h1>
         <div className="flex items-center gap-4">
           <span className="text-gray-400 text-sm hidden sm:block">
             {vendor?.storeName}

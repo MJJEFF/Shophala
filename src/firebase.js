@@ -4,9 +4,9 @@ import { getFirestore } from "firebase/firestore";
 
 const firebaseConfig = {
     apiKey: "AIzaSyD8Caz-xb3le5VKp4WNssk5jfpgVGKB_xM",
-    authDomain: "vendorflow-baa9d.firebaseapp.com",
-    projectId: "vendorflow-baa9d",
-    storageBucket: "vendorflow-baa9d.firebasestorage.app",
+    authDomain: "Wazobuy-baa9d.firebaseapp.com",
+    projectId: "Wazobuy-baa9d",
+    storageBucket: "Wazobuy-baa9d.firebasestorage.app",
     messagingSenderId: "612657966313",
     appId: "1:612657966313:web:08711a49b68af8c5339478"
 };

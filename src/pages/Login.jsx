@@ -58,7 +58,7 @@ export default function Login() {
         <div className="min-h-screen bg-black text-white flex flex-col">
             {/* Navbar */}
             <nav className="flex items-center justify-between px-6 md:px-12 py-6 border-b border-white/10">
-                <Link to="/" className="text-2xl font-bold">VendorFlow</Link>
+                <Link to="/" className="text-2xl font-bold">Wazobuy</Link>
             </nav>
 
             {/* Form */}
@@ -88,7 +88,7 @@ export default function Login() {
                     <p className="text-gray-400 mb-8">
                         {isSignup
                             ? "Start selling on WhatsApp in minutes."
-                            : "Login to manage your VendorFlow store."}
+                            : "Login to manage your Wazobuy store."}
                     </p>
 
                     {/* Error */}

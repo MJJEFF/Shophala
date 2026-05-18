@@ -16,7 +16,7 @@ const plans = [
             "Up to 10 products",
             "WhatsApp checkout",
             "Basic analytics",
-            "VendorFlow branding",
+            "Wazobuy branding",
         ],
         cta: "Get Started Free",
         ctaStyle: "border border-white/20 hover:bg-white/10",
@@ -35,7 +35,7 @@ const plans = [
             "Unlimited products",
             "WhatsApp checkout",
             "Advanced analytics",
-            "Remove VendorFlow branding",
+            "Remove Wazobuy branding",
             "Custom store name",
             "Priority support",
         ],
@@ -56,7 +56,7 @@ const plans = [
             "Unlimited products",
             "WhatsApp checkout",
             "Full analytics suite",
-            "Remove VendorFlow branding",
+            "Remove Wazobuy branding",
             "Custom domain support",
             "Inventory management",
             "Dedicated support",
@@ -75,7 +75,7 @@ export default function Pricing() {
             {/* Navbar */}
             <nav className="flex items-center justify-between px-6 md:px-12 py-6 border-b border-white/10">
                 <Link to="/" className="text-2xl font-bold">
-                    VendorFlow
+                    Wazobuy
                 </Link>
                 <div className="flex items-center gap-4">
                     <Link to="/login" className="text-gray-300 hover:text-white transition text-sm">
@@ -208,8 +208,8 @@ export default function Pricing() {
                             a: "Yes. You can switch plans at any time. Changes take effect immediately.",
                         },
                         {
-                            q: "Do I need a website to use VendorFlow?",
-                            a: "No. VendorFlow gives you a storefront link you can share directly on WhatsApp, Instagram, or anywhere.",
+                            q: "Do I need a website to use Wazobuy?",
+                            a: "No. Wazobuy gives you a storefront link you can share directly on WhatsApp, Instagram, or anywhere.",
                         },
                         {
                             q: "How does WhatsApp checkout work?",
@@ -247,7 +247,7 @@ export default function Pricing() {
                         Ready to start selling?
                     </h2>
                     <p className="text-gray-400 mb-8 text-lg">
-                        Join hundreds of African vendors already using VendorFlow.
+                        Join hundreds of African vendors already using Wazobuy.
                     </p>
                     <Link to="/login">
                         <button className="bg-white text-black px-8 py-4 rounded-2xl font-semibold hover:scale-105 transition text-lg">
@@ -259,7 +259,7 @@ export default function Pricing() {
 
             {/* Footer */}
             <footer className="border-t border-white/10 px-6 md:px-12 py-8 text-center text-gray-500 text-sm">
-                © 2025 VendorFlow. Built for African businesses.
+                © 2025 Wazobuy. Built for African businesses.
             </footer>
         </div>
     );
