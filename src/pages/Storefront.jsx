@@ -75,7 +75,7 @@ export default function Storefront() {
             .map((i) => `• ${i.name} x${i.qty} — ₦${(i.price * i.qty).toLocaleString()}`)
             .join("\n");
 
-        const message = `Hello! I'd like to place an order from your Wazobuy store 🛍️
+        const message = `Hello! I'd like to place an order from your Shophala store 🛍️
 
 *Customer Details:*
 Name: ${customerForm.name}
@@ -122,7 +122,7 @@ Please confirm my order. Thank you!`;
             <div className="border-b border-white/10 px-6 md:px-12 py-6 flex items-center justify-between">
                 <div>
                     <h1 className="text-2xl font-bold">{vendorData?.storeName}</h1>
-                    <p className="text-gray-400 text-sm mt-1">Powered by Wazobuy</p>
+                    <p className="text-gray-400 text-sm mt-1">Powered by Shophala</p>
                 </div>
                 <button
                     onClick={() => setShowCart(true)}

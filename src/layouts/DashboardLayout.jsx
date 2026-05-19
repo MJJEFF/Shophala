@@ -14,7 +14,7 @@ export default function DashboardLayout({ children }) {
             {/* Sidebar */}
             <aside className="w-72 border-r border-white/10 p-6 hidden md:block">
                 <h1 className="text-3xl font-bold mb-12">
-                    Wazobuy AI
+                    Shophala AI
                 </h1>
 
                 <nav className="space-y-3">

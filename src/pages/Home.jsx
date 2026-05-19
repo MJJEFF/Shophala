@@ -9,7 +9,7 @@ export default function Home() {
         <div className="min-h-screen bg-black text-white overflow-hidden">
             {/* Navbar */}
             <nav className="flex items-center justify-between px-6 md:px-12 py-6 border-b border-white/10">
-                <h1 className="text-2xl font-bold">Wazobuy</h1>
+                <h1 className="text-2xl font-bold">Shophala</h1>
 
                 {/* Desktop Nav */}
                 <div className="hidden md:flex items-center gap-4">
@@ -51,7 +51,7 @@ export default function Home() {
                         </p>
                         <h1 className="text-4xl sm:text-5xl md:text-7xl font-bold leading-tight mb-8">
                             Sell smarter with
-                            <span className="text-green-400"> Wazobuy</span>
+                            <span className="text-green-400"> Shophala</span>
                         </h1>
                         <p className="text-lg sm:text-xl text-gray-400 leading-relaxed mb-10">
                             Create a storefront, manage products, track orders,
@@ -75,7 +75,7 @@ export default function Home() {
                     <div className="relative mt-10 lg:mt-0">
                         <div className="bg-gradient-to-br from-gray-900 to-black border border-white/10 rounded-[2rem] p-6 sm:p-8 shadow-2xl">
                             <div className="flex items-center justify-between mb-8">
-                                <h2 className="text-xl sm:text-2xl font-bold">Wazobuy Dashboard</h2>
+                                <h2 className="text-xl sm:text-2xl font-bold">Shophala Dashboard</h2>
                                 <div className="bg-green-500/20 text-green-400 px-3 py-1.5 rounded-full text-sm">
                                     Online
                                 </div>
@@ -130,7 +130,7 @@ export default function Home() {
 
             {/* Footer */}
             <footer className="border-t border-white/10 px-6 md:px-12 py-8 text-center text-gray-500 text-sm">
-                © 2025 Wazobuy. Built for African businesses.
+                © 2025 Shophala. Built for African businesses.
             </footer>
         </div>
     );
