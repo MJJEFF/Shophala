@@ -1,19 +1,19 @@
 import { initializeApp } from "firebase/app";
 import { getAuth, browserLocalPersistence, setPersistence } from "firebase/auth";
-import { getFirestore } from "firebase/firestore";
+import { getFirestore, enableIndexedDbPersistence } from "firebase/firestore";
 
 const firebaseConfig = {
-    apiKey: "AIzaSyD8Caz-xb3le5VKp4WNssk5jfpgVGKB_xM",
-    authDomain: "Shophala-baa9d.firebaseapp.com",
-    projectId: "Shophala-baa9d",
-    storageBucket: "Shophala-baa9d.firebasestorage.app",
-    messagingSenderId: "612657966313",
-    appId: "1:612657966313:web:08711a49b68af8c5339478"
+    apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
+    authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN,
+    projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID,
+    storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET,
+    messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_ID,
+    appId: import.meta.env.VITE_FIREBASE_APP_ID,
 };
 
 const app = initializeApp(firebaseConfig);
 export const auth = getAuth(app);
 export const db = getFirestore(app);
 
-// Keep user logged in even after browser refresh
 setPersistence(auth, browserLocalPersistence);
+enableIndexedDbPersistence(db).catch(() => { });

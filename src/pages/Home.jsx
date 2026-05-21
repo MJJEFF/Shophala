@@ -63,11 +63,12 @@ export default function Home() {
                                     Launch Store <ArrowRight size={20} />
                                 </button>
                             </Link>
-                            <Link to="/store/demo">
-                                <button className="border border-white/20 px-7 py-4 rounded-2xl hover:bg-white/10 transition w-full sm:w-auto text-center">
-                                    View Demo
-                                </button>
-                            </Link>
+                            <button
+                                onClick={() => document.getElementById("features").scrollIntoView({ behavior: "smooth" })}
+                                className="border border-white/20 px-7 py-4 rounded-2xl hover:bg-white/10 transition w-full sm:w-auto text-center"
+                            >
+                                See Features
+                            </button>
                         </div>
                     </div>
 
@@ -106,7 +107,7 @@ export default function Home() {
             </section>
 
             {/* Features */}
-            <section className="px-6 md:px-12 pb-24">
+            <section id="features" className="px-6 md:px-12 pb-24">
                 <div className="max-w-6xl mx-auto">
                     <div className="text-center mb-16">
                         <p className="uppercase tracking-[0.3em] text-gray-500 mb-5 text-sm">Features</p>

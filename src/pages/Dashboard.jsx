@@ -32,6 +32,10 @@ export default function Dashboard() {
   const [showAddProduct, setShowAddProduct] = useState(false);
   const [loading, setLoading] = useState(true);
   const [copied, setCopied] = useState(false);
+  const [imageFile, setImageFile] = useState(null);
+  const [imagePreview, setImagePreview] = useState("");
+  const [addingProduct, setAddingProduct] = useState(false);
+  const [uploadError, setUploadError] = useState("");
   const [form, setForm] = useState({
     name: "",
     price: "",
@@ -62,17 +66,57 @@ export default function Dashboard() {
   }, []);
 
   const handleAddProduct = async () => {
-    if (!form.name || !form.price) return;
-    const newProduct = {
-      ...form,
-      price: Number(form.price),
-      vendorId: user.uid,
-      createdAt: new Date(),
-    };
-    const ref = await addDoc(collection(db, "products"), newProduct);
-    setProducts([...products, { id: ref.id, ...newProduct }]);
-    setForm({ name: "", price: "", description: "", image: "", category: "" });
-    setShowAddProduct(false);
+    if (!form.name || !form.price) {
+      setUploadError("Product name and price are required.");
+      return;
+    }
+
+    setAddingProduct(true);
+    setUploadError("");
+
+    try {
+      let imageUrl = "";
+
+      if (imageFile) {
+        const formData = new FormData();
+        formData.append("image", imageFile);
+        formData.append("key", import.meta.env.VITE_IMGBB_KEY);
+
+        const res = await fetch("https://api.imgbb.com/1/upload", {
+          method: "POST",
+          body: formData,
+        });
+        const data = await res.json();
+        if (data.success) {
+          imageUrl = data.data.url;
+        } else {
+          setUploadError("Image upload failed. Try again.");
+          setAddingProduct(false);
+          return;
+        }
+      }
+
+      const newProduct = {
+        name: form.name,
+        price: Number(form.price),
+        description: form.description,
+        category: form.category,
+        image: imageUrl,
+        vendorId: user.uid,
+        createdAt: new Date(),
+      };
+
+      const ref = await addDoc(collection(db, "products"), newProduct);
+      setProducts([...products, { id: ref.id, ...newProduct }]);
+      setForm({ name: "", price: "", description: "", image: "", category: "" });
+      setImageFile(null);
+      setImagePreview("");
+      setShowAddProduct(false);
+    } catch (err) {
+      setUploadError("Something went wrong. Please try again.");
+    }
+
+    setAddingProduct(false);
   };
 
   const handleDelete = async (id) => {
@@ -293,7 +337,7 @@ export default function Dashboard() {
       {/* Add Product Modal */}
       {showAddProduct && (
         <div className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center z-50 px-6">
-          <div className="bg-gray-900 border border-white/10 rounded-[2rem] p-8 w-full max-w-md">
+          <div className="bg-gray-900 border border-white/10 rounded-[2rem] p-8 w-full max-w-md max-h-[90vh] overflow-y-auto">
             <div className="flex items-center justify-between mb-6">
               <h3 className="text-xl font-bold">Add Product</h3>
               <button onClick={() => setShowAddProduct(false)}>
@@ -301,22 +345,56 @@ export default function Dashboard() {
               </button>
             </div>
             <div className="flex flex-col gap-4">
-              {[
-                { name: "name", placeholder: "Product Name" },
-                { name: "price", placeholder: "Price (₦)", type: "number" },
-                { name: "category", placeholder: "Category (e.g. Shoes, Food)" },
-                { name: "image", placeholder: "Image URL (optional)" },
-              ].map((f) => (
-                <input
-                  key={f.name}
-                  name={f.name}
-                  type={f.type || "text"}
-                  placeholder={f.placeholder}
-                  value={form[f.name]}
-                  onChange={(e) => setForm({ ...form, [e.target.name]: e.target.value })}
-                  className="bg-white/5 border border-white/10 rounded-2xl px-5 py-4 text-white placeholder-gray-500 focus:outline-none focus:border-white/30 transition"
-                />
-              ))}
+              {/* Image Upload */}
+              <div
+                onClick={() => document.getElementById("imageInput").click()}
+                className="w-full h-40 bg-white/5 border-2 border-dashed border-white/20 rounded-2xl flex flex-col items-center justify-center cursor-pointer hover:border-white/40 transition"
+              >
+                {imagePreview ? (
+                  <img src={imagePreview} alt="preview" className="w-full h-full object-cover rounded-2xl" />
+                ) : (
+                  <>
+                    <Plus size={32} className="text-gray-500 mb-2" />
+                    <p className="text-gray-500 text-sm">Click to upload product image</p>
+                  </>
+                )}
+              </div>
+              <input
+                id="imageInput"
+                type="file"
+                accept="image/*"
+                className="hidden"
+                onChange={(e) => {
+                  const file = e.target.files[0];
+                  if (file) {
+                    setImageFile(file);
+                    setImagePreview(URL.createObjectURL(file));
+                  }
+                }}
+              />
+
+              <input
+                name="name"
+                placeholder="Product Name *"
+                value={form.name}
+                onChange={(e) => setForm({ ...form, name: e.target.value })}
+                className="bg-white/5 border border-white/10 rounded-2xl px-5 py-4 text-white placeholder-gray-500 focus:outline-none focus:border-white/30 transition"
+              />
+              <input
+                name="price"
+                type="number"
+                placeholder="Price (₦) *"
+                value={form.price}
+                onChange={(e) => setForm({ ...form, price: e.target.value })}
+                className="bg-white/5 border border-white/10 rounded-2xl px-5 py-4 text-white placeholder-gray-500 focus:outline-none focus:border-white/30 transition"
+              />
+              <input
+                name="category"
+                placeholder="Category (e.g. Shoes, Food)"
+                value={form.category}
+                onChange={(e) => setForm({ ...form, category: e.target.value })}
+                className="bg-white/5 border border-white/10 rounded-2xl px-5 py-4 text-white placeholder-gray-500 focus:outline-none focus:border-white/30 transition"
+              />
               <textarea
                 name="description"
                 placeholder="Product Description"
@@ -325,11 +403,17 @@ export default function Dashboard() {
                 rows={3}
                 className="bg-white/5 border border-white/10 rounded-2xl px-5 py-4 text-white placeholder-gray-500 focus:outline-none focus:border-white/30 transition resize-none"
               />
+
+              {uploadError && (
+                <p className="text-red-400 text-sm">{uploadError}</p>
+              )}
+
               <button
                 onClick={handleAddProduct}
-                className="bg-white text-black py-4 rounded-2xl font-semibold hover:scale-105 transition mt-2"
+                disabled={addingProduct || !form.name || !form.price}
+                className="bg-white text-black py-4 rounded-2xl font-semibold hover:scale-105 transition mt-2 disabled:opacity-50 disabled:scale-100 flex items-center justify-center gap-2"
               >
-                Add Product
+                {addingProduct ? "Adding Product..." : "Add Product"}
               </button>
             </div>
           </div>
