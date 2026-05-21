@@ -130,7 +130,10 @@ export default function Home() {
 
             {/* Footer */}
             <footer className="border-t border-white/10 px-6 md:px-12 py-8 text-center text-gray-500 text-sm">
-                © 2025 Shophala. Built for African businesses.
+                <div className="flex flex-col sm:flex-row items-center justify-center gap-2">
+                    <span>© 2025 Shophala. Built for African businesses.</span>
+                    <Link to="/legal" className="hover:text-white transition">Terms & Privacy</Link>
+                </div>
             </footer>
         </div>
     );

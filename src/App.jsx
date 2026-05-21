@@ -8,6 +8,7 @@ import Home from "./pages/Home";
 import Storefront from "./pages/Storefront";
 import Login from "./pages/Login";
 import Dashboard from "./pages/Dashboard";
+import Legal from "./pages/Legal";
 
 function ProtectedRoute({ children }) {
   const [user, setUser] = useState(undefined);
@@ -34,6 +35,7 @@ export default function App() {
             <Dashboard />
           </ProtectedRoute>
         } />
+        <Route path="/legal" element={<Legal />} />
       </Routes>
     </BrowserRouter>
   );

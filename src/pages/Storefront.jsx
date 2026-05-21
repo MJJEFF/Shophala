@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { useParams } from "react-router-dom";
+import { Link, useParams } from "react-router-dom";
 import { collection, getDocs, query, where } from "firebase/firestore";
 import { db } from "../firebase";
 import { ShoppingCart, Plus, Minus, X, MessageCircle, Store } from "lucide-react";
@@ -348,6 +348,14 @@ Please confirm my order. Thank you!`;
                     </div>
                 </div>
             )}
+
+            {/* Footer */}
+            <footer className="border-t border-white/10 px-6 md:px-12 py-8 text-center text-gray-500 text-sm">
+                <div className="flex flex-col sm:flex-row items-center justify-center gap-2">
+                    <span>© 2025 Shophala. Built for African businesses.</span>
+                    <Link to="/legal" className="hover:text-white transition">Terms & Privacy</Link>
+                </div>
+            </footer>
         </div>
     );
 }

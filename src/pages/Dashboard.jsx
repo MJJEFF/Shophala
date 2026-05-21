@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import {
   collection,
   addDoc,
@@ -281,6 +281,14 @@ export default function Dashboard() {
           </div>
         )}
       </div>
+
+      {/* Footer */}
+      <footer className="border-t border-white/10 px-6 md:px-12 py-8 text-center text-gray-500 text-sm">
+        <div className="flex flex-col sm:flex-row items-center justify-center gap-2">
+          <span>© 2025 Shophala. Built for African businesses.</span>
+          <Link to="/legal" className="hover:text-white transition">Terms & Privacy</Link>
+        </div>
+      </footer>
 
       {/* Add Product Modal */}
       {showAddProduct && (
