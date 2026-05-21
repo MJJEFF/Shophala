@@ -3,6 +3,8 @@ import { Link, useNavigate } from "react-router-dom";
 import {
     createUserWithEmailAndPassword,
     signInWithEmailAndPassword,
+    sendEmailVerification,
+    signOut,
 } from "firebase/auth";
 import { doc, setDoc } from "firebase/firestore";
 import { auth, db } from "../firebase";
@@ -13,6 +15,7 @@ export default function Login() {
     const [showPassword, setShowPassword] = useState(false);
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState("");
+    const [verificationSent, setVerificationSent] = useState(false);
     const [form, setForm] = useState({
         name: "",
         email: "",
@@ -26,6 +29,32 @@ export default function Login() {
 
     const handleSubmit = async () => {
         setError("");
+
+        // Password strength check
+        if (form.password.length < 8) {
+            setError("Password must be at least 8 characters.");
+            return;
+        }
+
+        // Email format check
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        if (!emailRegex.test(form.email)) {
+            setError("Please enter a valid email address.");
+            return;
+        }
+
+        // Name check for signup
+        if (isSignup && form.name.trim().length < 2) {
+            setError("Please enter your full name.");
+            return;
+        }
+
+        // Phone check for signup
+        if (isSignup && form.phone.replace(/\D/g, "").length < 10) {
+            setError("Please enter a valid WhatsApp number.");
+            return;
+        }
+
         setLoading(true);
         try {
             if (isSignup) {
@@ -34,6 +63,10 @@ export default function Login() {
                     form.email,
                     form.password
                 );
+
+                // Send email verification
+                await sendEmailVerification(cred.user);
+
                 // Save vendor profile to Firestore
                 await setDoc(doc(db, "vendors", cred.user.uid), {
                     name: form.name,
@@ -42,14 +75,33 @@ export default function Login() {
                     uid: cred.user.uid,
                     createdAt: new Date(),
                     storeName: form.name + "'s Store",
+                    emailVerified: false,
+                    plan: "free",
                 });
-                navigate("/dashboard");
+
+                // Show verification message instead of redirecting
+                setVerificationSent(true);
+
             } else {
-                await signInWithEmailAndPassword(auth, form.email, form.password);
+                const cred = await signInWithEmailAndPassword(auth, form.email, form.password);
+
+                // Block unverified users
+                if (!cred.user.emailVerified) {
+                    await signOut(auth);
+                    setError("Please verify your email before logging in. Check your inbox or spam folder.");
+                    setLoading(false);
+                    return;
+                }
+
                 navigate("/dashboard");
             }
         } catch (err) {
-            setError(err.message.replace("Firebase: ", "").replace(/\(.*\)/, ""));
+            const msg = err.code;
+            if (msg === "auth/user-not-found") setError("No account found with this email.");
+            else if (msg === "auth/wrong-password") setError("Incorrect password. Try again.");
+            else if (msg === "auth/too-many-requests") setError("Too many attempts. Try again later.");
+            else if (msg === "auth/email-already-in-use") setError("An account with this email already exists.");
+            else setError("Something went wrong. Please try again.");
         }
         setLoading(false);
     };
@@ -97,6 +149,15 @@ export default function Login() {
                             {error}
                         </div>
                     )}
+
+                    {verificationSent && (
+                        <div className="bg-green-500/10 border border-green-500/30 text-green-400 px-4 py-4 rounded-xl mb-6 text-sm text-center">
+                            <p className="font-bold mb-1">Check your email! 📧</p>
+                            <p>We sent a verification link to <strong>{form.email}</strong>.</p>
+                            <p className="mt-1">Verify your email then come back to login.</p>
+                        </div>
+                    )}
+
 
                     <div className="flex flex-col gap-4">
                         {isSignup && (

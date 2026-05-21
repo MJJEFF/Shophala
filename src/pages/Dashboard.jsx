@@ -46,24 +46,16 @@ export default function Dashboard() {
       if (!u) return navigate("/login");
       setUser(u);
 
-      // Fetch vendor profile
-      const vendorSnap = await getDocs(
-        query(collection(db, "vendors"), where("uid", "==", u.uid))
-      );
+      // Fetch everything simultaneously
+      const [vendorSnap, productSnap, orderSnap] = await Promise.all([
+        getDocs(query(collection(db, "vendors"), where("uid", "==", u.uid))),
+        getDocs(query(collection(db, "products"), where("vendorId", "==", u.uid))),
+        getDocs(query(collection(db, "orders"), where("vendorId", "==", u.uid))),
+      ]);
+
       if (!vendorSnap.empty) setVendor(vendorSnap.docs[0].data());
-
-      // Fetch products
-      const productSnap = await getDocs(
-        query(collection(db, "products"), where("vendorId", "==", u.uid))
-      );
       setProducts(productSnap.docs.map((d) => ({ id: d.id, ...d.data() })));
-
-      // Fetch orders
-      const orderSnap = await getDocs(
-        query(collection(db, "orders"), where("vendorId", "==", u.uid))
-      );
       setOrders(orderSnap.docs.map((d) => ({ id: d.id, ...d.data() })));
-
       setLoading(false);
     });
     return unsub;
