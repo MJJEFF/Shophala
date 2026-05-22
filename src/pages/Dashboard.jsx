@@ -174,6 +174,12 @@ export default function Dashboard() {
       {/* Navbar */}
       <nav className="flex items-center justify-between px-6 md:px-12 py-5 border-b border-white/10">
         <Link to="/" className="text-xl font-bold">Shophala</Link>
+        <Link
+          to="/settings"
+          className="text-gray-400 hover:text-white transition text-sm"
+        >
+          Settings
+        </Link>
         <div className="flex items-center gap-4">
           <span className="text-gray-400 text-sm hidden sm:block">
             {vendor?.storeName}

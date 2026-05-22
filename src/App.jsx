@@ -9,6 +9,7 @@ import Login from "./pages/Login";
 import Dashboard from "./pages/Dashboard";
 import Pricing from "./pages/Pricing";
 import Legal from "./pages/Legal";
+import Settings from "./pages/Settings";
 
 function ProtectedRoute({ children }) {
   const [user, setUser] = useState(undefined);
@@ -39,6 +40,11 @@ export default function App() {
         <Route path="/dashboard" element={
           <ProtectedRoute>
             <Dashboard />
+          </ProtectedRoute>
+        } />
+        <Route path="/settings" element={
+          <ProtectedRoute>
+            <Settings />
           </ProtectedRoute>
         } />
       </Routes>
