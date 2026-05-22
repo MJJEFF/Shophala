@@ -81,21 +81,23 @@ export default function Dashboard() {
 
     if (imageFile) {
       setUploadProgress(30);
-      const formData = new FormData();
-      formData.append("file", imageFile);
-      formData.append("fileName", `${Date.now()}_${imageFile.name}`);
-      formData.append("publicKey", "public_3mpFGgX5P3YOc+nBfY9N8PzLgpI=");
-
       try {
-        const res = await fetch("https://upload.imagekit.io/api/v1/files/upload", {
-          method: "POST",
-          body: formData,
-        });
+        const formData = new FormData();
+        formData.append("image", imageFile);
+
+        const res = await fetch(
+          `https://api.imgbb.com/1/upload?key=${import.meta.env.VITE_IMGBB_API_KEY}`,
+          { method: "POST", body: formData }
+        );
         const data = await res.json();
-        imageUrl = data.url;
-        setUploadProgress(90);
+
+        if (data.success) {
+          imageUrl = data.data.url;
+          setUploadProgress(100);
+        } else {
+          throw new Error("Upload failed");
+        }
       } catch (err) {
-        console.error("Image upload failed:", err);
         alert("Image upload failed. Please try again.");
         setUploadProgress(0);
         return;
