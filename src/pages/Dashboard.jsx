@@ -8,6 +8,7 @@ import {
   where,
   deleteDoc,
   doc,
+  getDoc,
 } from "firebase/firestore";
 import { signOut, onAuthStateChanged } from "firebase/auth";
 import { auth, db } from "../firebase";
@@ -33,6 +34,7 @@ export default function Dashboard() {
   const [loading, setLoading] = useState(true);
   const [copied, setCopied] = useState(false);
   const [imageFile, setImageFile] = useState(null);
+  const [uploadProgress, setUploadProgress] = useState(0);
   const [imagePreview, setImagePreview] = useState("");
   const [addingProduct, setAddingProduct] = useState(false);
   const [uploadError, setUploadError] = useState("");
@@ -50,73 +52,70 @@ export default function Dashboard() {
       if (!u) return navigate("/login");
       setUser(u);
 
-      // Fetch everything simultaneously
-      const [vendorSnap, productSnap, orderSnap] = await Promise.all([
-        getDocs(query(collection(db, "vendors"), where("uid", "==", u.uid))),
-        getDocs(query(collection(db, "products"), where("vendorId", "==", u.uid))),
-        getDocs(query(collection(db, "orders"), where("vendorId", "==", u.uid))),
-      ]);
+      try {
+        // Fetch vendor directly by ID (instant)
+        const vendorDoc = await getDoc(doc(db, "vendors", u.uid));
+        if (vendorDoc.exists()) setVendor(vendorDoc.data());
 
-      if (!vendorSnap.empty) setVendor(vendorSnap.docs[0].data());
-      setProducts(productSnap.docs.map((d) => ({ id: d.id, ...d.data() })));
-      setOrders(orderSnap.docs.map((d) => ({ id: d.id, ...d.data() })));
+        // Fetch products and orders simultaneously
+        const [productSnap, orderSnap] = await Promise.all([
+          getDocs(query(collection(db, "products"), where("vendorId", "==", u.uid))),
+          getDocs(query(collection(db, "orders"), where("vendorId", "==", u.uid))),
+        ]);
+
+        setProducts(productSnap.docs.map((d) => ({ id: d.id, ...d.data() })));
+        setOrders(orderSnap.docs.map((d) => ({ id: d.id, ...d.data() })));
+      } catch (err) {
+        console.error("Error loading dashboard:", err);
+      }
+
       setLoading(false);
     });
     return unsub;
   }, []);
 
   const handleAddProduct = async () => {
-    if (!form.name || !form.price) {
-      setUploadError("Product name and price are required.");
-      return;
-    }
+    if (!form.name || !form.price) return;
 
-    setAddingProduct(true);
-    setUploadError("");
+    let imageUrl = "";
 
-    try {
-      let imageUrl = "";
+    if (imageFile) {
+      setUploadProgress(30);
+      const formData = new FormData();
+      formData.append("file", imageFile);
+      formData.append("fileName", `${Date.now()}_${imageFile.name}`);
+      formData.append("publicKey", "public_3mpFGgX5P3YOc+nBfY9N8PzLgpI=");
 
-      if (imageFile) {
-        const formData = new FormData();
-        formData.append("image", imageFile);
-        formData.append("key", import.meta.env.VITE_IMGBB_KEY);
-
-        const res = await fetch("https://api.imgbb.com/1/upload", {
+      try {
+        const res = await fetch("https://upload.imagekit.io/api/v1/files/upload", {
           method: "POST",
           body: formData,
         });
         const data = await res.json();
-        if (data.success) {
-          imageUrl = data.data.url;
-        } else {
-          setUploadError("Image upload failed. Try again.");
-          setAddingProduct(false);
-          return;
-        }
+        imageUrl = data.url;
+        setUploadProgress(90);
+      } catch (err) {
+        console.error("Image upload failed:", err);
+        alert("Image upload failed. Please try again.");
+        setUploadProgress(0);
+        return;
       }
-
-      const newProduct = {
-        name: form.name,
-        price: Number(form.price),
-        description: form.description,
-        category: form.category,
-        image: imageUrl,
-        vendorId: user.uid,
-        createdAt: new Date(),
-      };
-
-      const ref = await addDoc(collection(db, "products"), newProduct);
-      setProducts([...products, { id: ref.id, ...newProduct }]);
-      setForm({ name: "", price: "", description: "", image: "", category: "" });
-      setImageFile(null);
-      setImagePreview("");
-      setShowAddProduct(false);
-    } catch (err) {
-      setUploadError("Something went wrong. Please try again.");
     }
 
-    setAddingProduct(false);
+    const newProduct = {
+      ...form,
+      price: Number(form.price),
+      image: imageUrl,
+      vendorId: user.uid,
+      createdAt: new Date(),
+    };
+
+    const docRef = await addDoc(collection(db, "products"), newProduct);
+    setProducts([...products, { id: docRef.id, ...newProduct }]);
+    setForm({ name: "", price: "", description: "", image: "", category: "" });
+    setImageFile(null);
+    setUploadProgress(0);
+    setShowAddProduct(false);
   };
 
   const handleDelete = async (id) => {
@@ -346,17 +345,28 @@ export default function Dashboard() {
             </div>
             <div className="flex flex-col gap-4">
               {/* Image Upload */}
-              <div
-                onClick={() => document.getElementById("imageInput").click()}
-                className="w-full h-40 bg-white/5 border-2 border-dashed border-white/20 rounded-2xl flex flex-col items-center justify-center cursor-pointer hover:border-white/40 transition"
-              >
-                {imagePreview ? (
-                  <img src={imagePreview} alt="preview" className="w-full h-full object-cover rounded-2xl" />
-                ) : (
-                  <>
-                    <Plus size={32} className="text-gray-500 mb-2" />
-                    <p className="text-gray-500 text-sm">Click to upload product image</p>
-                  </>
+              <div>
+                <label className="block text-gray-400 text-sm mb-2">Product Image</label>
+                <input
+                  type="file"
+                  accept="image/*"
+                  onChange={(e) => setImageFile(e.target.files[0])}
+                  className="w-full text-gray-400 text-sm file:mr-4 file:py-2 file:px-4 file:rounded-xl file:border-0 file:bg-white/10 file:text-white hover:file:bg-white/20 transition"
+                />
+                {imageFile && (
+                  <img
+                    src={URL.createObjectURL(imageFile)}
+                    alt="preview"
+                    className="mt-3 w-full h-40 object-cover rounded-xl"
+                  />
+                )}
+                {uploadProgress > 0 && uploadProgress < 100 && (
+                  <div className="mt-2 bg-white/10 rounded-full h-2">
+                    <div
+                      className="bg-green-500 h-2 rounded-full transition-all"
+                      style={{ width: `${uploadProgress}%` }}
+                    />
+                  </div>
                 )}
               </div>
               <input
