@@ -35,53 +35,62 @@ export default function Dashboard() {
   const [copied, setCopied] = useState(false);
   const [imageFile, setImageFile] = useState(null);
   const [uploadProgress, setUploadProgress] = useState(0);
-  const [imagePreview, setImagePreview] = useState("");
   const [addingProduct, setAddingProduct] = useState(false);
   const [uploadError, setUploadError] = useState("");
   const [form, setForm] = useState({
     name: "",
     price: "",
     description: "",
-    image: "",
     category: "",
   });
   const navigate = useNavigate();
 
   useEffect(() => {
+    let mounted = true;
     const unsub = onAuthStateChanged(auth, async (u) => {
-      if (!u) return navigate("/login");
+      if (!u) {
+        navigate("/login");
+        return;
+      }
+
+      if (!mounted) return;
       setUser(u);
 
       try {
-        // Fetch vendor directly by ID (instant)
-        const vendorDoc = await getDoc(doc(db, "vendors", u.uid));
-        if (vendorDoc.exists()) setVendor(vendorDoc.data());
-
-        // Fetch products and orders simultaneously
-        const [productSnap, orderSnap] = await Promise.all([
+        const [vendorDoc, productSnap, orderSnap] = await Promise.all([
+          getDoc(doc(db, "vendors", u.uid)),
           getDocs(query(collection(db, "products"), where("vendorId", "==", u.uid))),
           getDocs(query(collection(db, "orders"), where("vendorId", "==", u.uid))),
         ]);
 
+        if (!mounted) return;
+
+        if (vendorDoc.exists()) setVendor(vendorDoc.data());
         setProducts(productSnap.docs.map((d) => ({ id: d.id, ...d.data() })));
         setOrders(orderSnap.docs.map((d) => ({ id: d.id, ...d.data() })));
       } catch (err) {
-        console.error("Error loading dashboard:", err);
+        console.error("Dashboard load error:", err);
+      } finally {
+        if (mounted) setLoading(false);
       }
-
-      setLoading(false);
     });
-    return unsub;
+
+    return () => {
+      mounted = false;
+      unsub();
+    };
   }, []);
 
   const handleAddProduct = async () => {
     if (!form.name || !form.price) return;
+    setAddingProduct(true);
+    setUploadError("");
 
     let imageUrl = "";
 
     if (imageFile) {
-      setUploadProgress(30);
       try {
+        setUploadProgress(20);
         const formData = new FormData();
         formData.append("image", imageFile);
 
@@ -89,40 +98,52 @@ export default function Dashboard() {
           `https://api.imgbb.com/1/upload?key=${import.meta.env.VITE_IMGBB_API_KEY}`,
           { method: "POST", body: formData }
         );
+
         const data = await res.json();
+        setUploadProgress(80);
 
         if (data.success) {
-          imageUrl = data.data.url;
+          imageUrl = data.data.display_url;
           setUploadProgress(100);
         } else {
-          throw new Error("Upload failed");
+          throw new Error(data.error?.message || "Upload failed");
         }
       } catch (err) {
-        alert("Image upload failed. Please try again.");
-        setUploadProgress(0);
-        return;
+        console.error("Image upload error:", err);
+        setUploadError("Image upload failed. Product will be saved without image.");
+        imageUrl = "";
       }
     }
 
-    const newProduct = {
-      ...form,
-      price: Number(form.price),
-      image: imageUrl,
-      vendorId: user.uid,
-      createdAt: new Date(),
-    };
+    try {
+      const newProduct = {
+        name: form.name,
+        price: Number(form.price),
+        description: form.description,
+        category: form.category,
+        image: imageUrl,
+        vendorId: user.uid,
+        createdAt: new Date(),
+      };
 
-    const docRef = await addDoc(collection(db, "products"), newProduct);
-    setProducts([...products, { id: docRef.id, ...newProduct }]);
-    setForm({ name: "", price: "", description: "", image: "", category: "" });
-    setImageFile(null);
-    setUploadProgress(0);
-    setShowAddProduct(false);
+      const docRef = await addDoc(collection(db, "products"), newProduct);
+      setProducts((prev) => [...prev, { id: docRef.id, ...newProduct }]);
+      setForm({ name: "", price: "", description: "", category: "" });
+      setImageFile(null);
+      setUploadProgress(0);
+      setShowAddProduct(false);
+    } catch (err) {
+      console.error("Add product error:", err);
+      setUploadError("Failed to save product. Please try again.");
+    } finally {
+      setAddingProduct(false);
+    }
   };
 
   const handleDelete = async (id) => {
+    if (!confirm("Delete this product?")) return;
     await deleteDoc(doc(db, "products", id));
-    setProducts(products.filter((p) => p.id !== id));
+    setProducts((prev) => prev.filter((p) => p.id !== id));
   };
 
   const handleLogout = async () => {
@@ -142,8 +163,9 @@ export default function Dashboard() {
 
   if (loading)
     return (
-      <div className="min-h-screen bg-black text-white flex items-center justify-center">
-        <div className="text-gray-400 text-xl animate-pulse">Loading your store...</div>
+      <div className="min-h-screen bg-black text-white flex flex-col items-center justify-center gap-4">
+        <div className="w-8 h-8 border-2 border-white/20 border-t-white rounded-full animate-spin" />
+        <p className="text-gray-400">Loading your store... Please wait.</p>
       </div>
     );
 
@@ -151,7 +173,7 @@ export default function Dashboard() {
     <div className="min-h-screen bg-black text-white">
       {/* Navbar */}
       <nav className="flex items-center justify-between px-6 md:px-12 py-5 border-b border-white/10">
-        <h1 className="text-xl font-bold">Shophala</h1>
+        <Link to="/" className="text-xl font-bold">Shophala</Link>
         <div className="flex items-center gap-4">
           <span className="text-gray-400 text-sm hidden sm:block">
             {vendor?.storeName}
@@ -206,9 +228,8 @@ export default function Dashboard() {
             <button
               key={tab}
               onClick={() => setActiveTab(tab)}
-              className={`px-5 py-2.5 rounded-xl text-sm font-semibold capitalize transition ${
-                activeTab === tab ? "bg-white text-black" : "text-gray-400 hover:text-white"
-              }`}
+              className={`px-5 py-2.5 rounded-xl text-sm font-semibold capitalize transition ${activeTab === tab ? "bg-white text-black" : "text-gray-400 hover:text-white"
+                }`}
             >
               {tab}
             </button>
@@ -229,7 +250,9 @@ export default function Dashboard() {
                       <p className="font-semibold text-sm">{o.customerName}</p>
                       <p className="text-gray-500 text-xs">{o.customerPhone}</p>
                     </div>
-                    <p className="text-green-400 font-bold text-sm">₦{o.total?.toLocaleString()}</p>
+                    <p className="text-green-400 font-bold text-sm">
+                      ₦{o.total?.toLocaleString()}
+                    </p>
                   </div>
                 ))
               )}
@@ -242,7 +265,9 @@ export default function Dashboard() {
                 products.slice(0, 5).map((p) => (
                   <div key={p.id} className="flex justify-between items-center py-3 border-b border-white/5 last:border-0">
                     <p className="font-semibold text-sm">{p.name}</p>
-                    <p className="text-white font-bold text-sm">₦{Number(p.price).toLocaleString()}</p>
+                    <p className="text-white font-bold text-sm">
+                      ₦{Number(p.price).toLocaleString()}
+                    </p>
                   </div>
                 ))
               )}
@@ -272,13 +297,24 @@ export default function Dashboard() {
               <div className="grid sm:grid-cols-2 md:grid-cols-3 gap-5">
                 {products.map((p) => (
                   <div key={p.id} className="bg-white/5 border border-white/10 rounded-2xl p-5">
-                    {p.image && (
-                      <img src={p.image} alt={p.name} className="w-full h-40 object-cover rounded-xl mb-4" />
+                    {p.image ? (
+                      <img
+                        src={p.image}
+                        alt={p.name}
+                        className="w-full h-40 object-cover rounded-xl mb-4"
+                        loading="lazy"
+                      />
+                    ) : (
+                      <div className="w-full h-40 bg-white/5 rounded-xl mb-4 flex items-center justify-center">
+                        <Package size={32} className="text-gray-600" />
+                      </div>
                     )}
                     <h4 className="font-bold mb-1">{p.name}</h4>
                     <p className="text-gray-400 text-sm mb-3 line-clamp-2">{p.description}</p>
                     <div className="flex items-center justify-between">
-                      <p className="text-green-400 font-bold">₦{Number(p.price).toLocaleString()}</p>
+                      <p className="text-green-400 font-bold">
+                        ₦{Number(p.price).toLocaleString()}
+                      </p>
                       <button
                         onClick={() => handleDelete(p.id)}
                         className="text-red-400 hover:text-red-300 transition"
@@ -314,7 +350,9 @@ export default function Dashboard() {
                       </p>
                     </div>
                     <div className="text-right">
-                      <p className="text-green-400 font-bold text-lg">₦{o.total?.toLocaleString()}</p>
+                      <p className="text-green-400 font-bold text-lg">
+                        ₦{o.total?.toLocaleString()}
+                      </p>
                       <span className="text-xs bg-green-500/20 text-green-400 px-3 py-1 rounded-full">
                         WhatsApp Order
                       </span>
@@ -329,7 +367,7 @@ export default function Dashboard() {
 
       {/* Footer */}
       <footer className="border-t border-white/10 px-6 md:px-12 py-8 text-center text-gray-500 text-sm">
-        <div className="flex flex-col sm:flex-row items-center justify-center gap-2">
+        <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
           <span>© 2025 Shophala. Built for African businesses.</span>
           <Link to="/legal" className="hover:text-white transition">Terms & Privacy</Link>
         </div>
@@ -341,19 +379,30 @@ export default function Dashboard() {
           <div className="bg-gray-900 border border-white/10 rounded-[2rem] p-8 w-full max-w-md max-h-[90vh] overflow-y-auto">
             <div className="flex items-center justify-between mb-6">
               <h3 className="text-xl font-bold">Add Product</h3>
-              <button onClick={() => setShowAddProduct(false)}>
+              <button onClick={() => {
+                setShowAddProduct(false);
+                setImageFile(null);
+                setUploadProgress(0);
+                setUploadError("");
+              }}>
                 <X size={24} className="text-gray-400 hover:text-white" />
               </button>
             </div>
+
             <div className="flex flex-col gap-4">
               {/* Image Upload */}
               <div>
-                <label className="block text-gray-400 text-sm mb-2">Product Image</label>
+                <label className="block text-gray-400 text-sm mb-2">
+                  Product Image (optional)
+                </label>
                 <input
                   type="file"
                   accept="image/*"
-                  onChange={(e) => setImageFile(e.target.files[0])}
-                  className="w-full text-gray-400 text-sm file:mr-4 file:py-2 file:px-4 file:rounded-xl file:border-0 file:bg-white/10 file:text-white hover:file:bg-white/20 transition"
+                  onChange={(e) => {
+                    setImageFile(e.target.files[0]);
+                    setUploadError("");
+                  }}
+                  className="w-full text-gray-400 text-sm file:mr-4 file:py-2 file:px-4 file:rounded-xl file:border-0 file:bg-white/10 file:text-white hover:file:bg-white/20 transition cursor-pointer"
                 />
                 {imageFile && (
                   <img
@@ -365,25 +414,12 @@ export default function Dashboard() {
                 {uploadProgress > 0 && uploadProgress < 100 && (
                   <div className="mt-2 bg-white/10 rounded-full h-2">
                     <div
-                      className="bg-green-500 h-2 rounded-full transition-all"
+                      className="bg-green-500 h-2 rounded-full transition-all duration-300"
                       style={{ width: `${uploadProgress}%` }}
                     />
                   </div>
                 )}
               </div>
-              <input
-                id="imageInput"
-                type="file"
-                accept="image/*"
-                className="hidden"
-                onChange={(e) => {
-                  const file = e.target.files[0];
-                  if (file) {
-                    setImageFile(file);
-                    setImagePreview(URL.createObjectURL(file));
-                  }
-                }}
-              />
 
               <input
                 name="name"
@@ -423,9 +459,16 @@ export default function Dashboard() {
               <button
                 onClick={handleAddProduct}
                 disabled={addingProduct || !form.name || !form.price}
-                className="bg-white text-black py-4 rounded-2xl font-semibold hover:scale-105 transition mt-2 disabled:opacity-50 disabled:scale-100 flex items-center justify-center gap-2"
+                className="bg-white text-black py-4 rounded-2xl font-semibold transition mt-2 disabled:opacity-50 flex items-center justify-center gap-2 hover:scale-105 disabled:scale-100"
               >
-                {addingProduct ? "Adding Product..." : "Add Product"}
+                {addingProduct ? (
+                  <>
+                    <div className="w-4 h-4 border-2 border-black/20 border-t-black rounded-full animate-spin" />
+                    {imageFile ? "Uploading image..." : "Adding product..."}
+                  </>
+                ) : (
+                  "Add Product"
+                )}
               </button>
             </div>
           </div>
