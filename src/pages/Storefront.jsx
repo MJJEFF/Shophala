@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { Link, useParams } from "react-router-dom";
-import { collection, getDocs, query, where } from "firebase/firestore";
+import { collection, getDocs, query, where, getDoc, doc } from "firebase/firestore";
 import { db } from "../firebase";
 import { ShoppingCart, Plus, Minus, X, MessageCircle, Store } from "lucide-react";
 
@@ -21,22 +21,27 @@ export default function Storefront() {
 
     useEffect(() => {
         const fetchStore = async () => {
-            // Fetch vendor
-            const vendorSnap = await getDocs(
-                query(collection(db, "vendors"), where("uid", "==", vendor))
-            );
-            if (vendorSnap.empty) {
-                setNotFound(true);
-                setLoading(false);
-                return;
-            }
-            setVendorData(vendorSnap.docs[0].data());
+            try {
+                // Fetch vendor directly by ID (much faster)
+                const { getDoc, doc } = await import("firebase/firestore");
+                const vendorDoc = await getDoc(doc(db, "vendors", vendor));
 
-            // Fetch products
-            const productSnap = await getDocs(
-                query(collection(db, "products"), where("vendorId", "==", vendor))
-            );
-            setProducts(productSnap.docs.map((d) => ({ id: d.id, ...d.data() })));
+                if (!vendorDoc.exists()) {
+                    setNotFound(true);
+                    setLoading(false);
+                    return;
+                }
+                setVendorData(vendorDoc.data());
+
+                // Fetch products
+                const productSnap = await getDocs(
+                    query(collection(db, "products"), where("vendorId", "==", vendor))
+                );
+                setProducts(productSnap.docs.map((d) => ({ id: d.id, ...d.data() })));
+            } catch (err) {
+                console.error("Storefront load error:", err);
+                setNotFound(true);
+            }
             setLoading(false);
         };
         fetchStore();
