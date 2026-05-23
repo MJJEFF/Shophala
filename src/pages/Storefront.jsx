@@ -1,6 +1,5 @@
 import { useEffect, useState } from "react";
 import { Link, useParams } from "react-router-dom";
-import { Link } from "react-router-dom";
 import { collection, getDocs, query, where, getDoc, doc } from "firebase/firestore";
 import { db } from "../firebase";
 import { ShoppingCart, Plus, Minus, X, MessageCircle, Store } from "lucide-react";
