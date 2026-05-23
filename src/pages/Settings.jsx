@@ -17,6 +17,7 @@ export default function Settings() {
         phone: "",
         email: "",
         storeDescription: "",
+        slug: "",
     });
     const navigate = useNavigate();
 
@@ -33,6 +34,7 @@ export default function Settings() {
                     phone: data.phone || "",
                     email: data.email || "",
                     storeDescription: data.storeDescription || "",
+                    slug: data.slug || "",
                 });
             }
             setLoading(false);
@@ -45,13 +47,41 @@ export default function Settings() {
             alert("Store name and WhatsApp number are required.");
             return;
         }
+
+        // Clean slug
+        const cleanSlug = form.slug
+            .toLowerCase()
+            .replace(/[^a-z0-9-]/g, "-")
+            .replace(/-+/g, "-")
+            .replace(/^-|-$/g, "");
+
+        if (cleanSlug && cleanSlug.length < 3) {
+            alert("Store URL must be at least 3 characters.");
+            return;
+        }
+
         setSaving(true);
         try {
+            // Check if slug is taken by another vendor
+            if (cleanSlug) {
+                const { getDocs, collection, query, where } = await import("firebase/firestore");
+                const slugCheck = await getDocs(
+                    query(collection(db, "vendors"), where("slug", "==", cleanSlug))
+                );
+                const taken = slugCheck.docs.find(d => d.id !== user.uid);
+                if (taken) {
+                    alert("That store URL is already taken. Please choose another.");
+                    setSaving(false);
+                    return;
+                }
+            }
+
             await updateDoc(doc(db, "vendors", user.uid), {
                 name: form.name,
                 storeName: form.storeName,
                 phone: form.phone,
                 storeDescription: form.storeDescription,
+                slug: cleanSlug,
                 updatedAt: new Date(),
             });
             setSaved(true);
@@ -63,7 +93,7 @@ export default function Settings() {
         setSaving(false);
     };
 
-    const storeLink = `${window.location.origin}/store/${user?.uid}`;
+    const storeLink = `${window.location.origin}/store/${form.slug || user?.uid}`;
 
     const copyLink = () => {
         navigator.clipboard.writeText(storeLink);
@@ -141,6 +171,25 @@ export default function Settings() {
                         />
                         <p className="text-gray-500 text-xs mt-2">
                             This is what customers see on your storefront.
+                        </p>
+                    </div>
+                    <div>
+                        <label className="block text-gray-400 text-sm mb-2">
+                            Custom Store URL
+                        </label>
+                        <div className="flex items-center bg-white/5 border border-white/10 rounded-2xl px-5 py-4 focus-within:border-white/30 transition">
+                            <span className="text-gray-500 text-sm mr-2 whitespace-nowrap">
+                                shophala.vercel.app/store/
+                            </span>
+                            <input
+                                value={form.slug}
+                                onChange={(e) => setForm({ ...form, slug: e.target.value })}
+                                placeholder="your-store-name"
+                                className="bg-transparent text-white placeholder-gray-600 focus:outline-none flex-1 text-sm"
+                            />
+                        </div>
+                        <p className="text-gray-500 text-xs mt-2">
+                            Only letters, numbers and hyphens. e.g. amakas-fashion
                         </p>
                     </div>
 

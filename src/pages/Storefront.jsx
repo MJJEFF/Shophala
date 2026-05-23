@@ -22,24 +22,39 @@ export default function Storefront() {
     useEffect(() => {
         const fetchStore = async () => {
             try {
-                // Fetch vendor directly by ID (much faster)
-                const { getDoc, doc } = await import("firebase/firestore");
+                // First try as UID (direct fetch)
                 const vendorDoc = await getDoc(doc(db, "vendors", vendor));
 
-                if (!vendorDoc.exists()) {
+                if (vendorDoc.exists()) {
+                    setVendorData({ id: vendorDoc.id, ...vendorDoc.data() });
+                    const productSnap = await getDocs(
+                        query(collection(db, "products"), where("vendorId", "==", vendorDoc.id))
+                    );
+                    setProducts(productSnap.docs.map((d) => ({ id: d.id, ...d.data() })));
+                    setLoading(false);
+                    return;
+                }
+
+                // If not found by UID, try as slug
+                const slugSnap = await getDocs(
+                    query(collection(db, "vendors"), where("slug", "==", vendor))
+                );
+
+                if (slugSnap.empty) {
                     setNotFound(true);
                     setLoading(false);
                     return;
                 }
-                setVendorData(vendorDoc.data());
 
-                // Fetch products
+                const vendorData = { id: slugSnap.docs[0].id, ...slugSnap.docs[0].data() };
+                setVendorData(vendorData);
+
                 const productSnap = await getDocs(
-                    query(collection(db, "products"), where("vendorId", "==", vendor))
+                    query(collection(db, "products"), where("vendorId", "==", vendorData.id))
                 );
                 setProducts(productSnap.docs.map((d) => ({ id: d.id, ...d.data() })));
             } catch (err) {
-                console.error("Storefront load error:", err);
+                console.error("Storefront error:", err);
                 setNotFound(true);
             }
             setLoading(false);

@@ -151,7 +151,7 @@ export default function Dashboard() {
     navigate("/");
   };
 
-  const storeLink = `${window.location.origin}/store/${user?.uid}`;
+  const storeLink = `${window.location.origin}/store/${vendor?.slug || user?.uid}`;
 
   const copyLink = () => {
     navigator.clipboard.writeText(storeLink);
