@@ -10,6 +10,7 @@ import Dashboard from "./pages/Dashboard";
 import Pricing from "./pages/Pricing";
 import Legal from "./pages/Legal";
 import Settings from "./pages/Settings";
+import ProductDetail from "./pages/ProductDetail";
 
 function ProtectedRoute({ children }) {
   const [user, setUser] = useState(undefined);
@@ -37,6 +38,7 @@ export default function App() {
         <Route path="/login" element={<Login />} />
         <Route path="/pricing" element={<Pricing />} />
         <Route path="/legal" element={<Legal />} />
+        <Route path="/store/:vendor/product/:productId" element={<ProductDetail />} />
         <Route path="/dashboard" element={
           <ProtectedRoute>
             <Dashboard />

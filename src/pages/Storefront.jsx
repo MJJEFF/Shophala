@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { Link, useParams } from "react-router-dom";
+import { Link } from "react-router-dom";
 import { collection, getDocs, query, where, getDoc, doc } from "firebase/firestore";
 import { db } from "../firebase";
 import { ShoppingCart, Plus, Minus, X, MessageCircle, Store } from "lucide-react";
@@ -155,37 +156,28 @@ Please confirm my order. Thank you!`;
                         <h2 className="text-2xl font-bold mb-8">Products</h2>
                         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-5">
                             {products.map((p) => (
-                                <div
-                                    key={p.id}
-                                    className="bg-white/5 border border-white/10 rounded-2xl overflow-hidden hover:border-white/30 transition group"
-                                >
-                                    {p.image ? (
-                                        <img
-                                            src={p.image}
-                                            alt={p.name}
-                                            className="w-full h-44 object-cover group-hover:scale-105 transition duration-300"
-                                        />
-                                    ) : (
-                                        <div className="w-full h-44 bg-white/5 flex items-center justify-center">
-                                            <Store size={32} className="text-gray-600" />
+                                <div key={p.id} className="bg-white/5 border border-white/10 rounded-2xl overflow-hidden hover:border-white/30 transition group">
+                                    <Link to={`/store/${vendor}/product/${p.id}`}>
+                                        {p.image ? (
+                                            <img src={p.image} alt={p.name} className="w-full h-44 object-cover group-hover:scale-105 transition duration-300" />
+                                        ) : (
+                                            <div className="w-full h-44 bg-white/5 flex items-center justify-center">
+                                                <Store size={32} className="text-gray-600" />
+                                            </div>
+                                        )}
+                                        <div className="p-4">
+                                            <h3 className="font-bold mb-1 truncate">{p.name}</h3>
+                                            <p className="text-gray-400 text-xs mb-3 line-clamp-2">{p.description}</p>
                                         </div>
-                                    )}
-                                    <div className="p-4">
-                                        <h3 className="font-bold mb-1 truncate">{p.name}</h3>
-                                        <p className="text-gray-400 text-xs mb-3 line-clamp-2">
-                                            {p.description}
-                                        </p>
-                                        <div className="flex items-center justify-between">
-                                            <p className="text-green-400 font-bold">
-                                                ₦{Number(p.price).toLocaleString()}
-                                            </p>
-                                            <button
-                                                onClick={() => addToCart(p)}
-                                                className="bg-white text-black p-2 rounded-xl hover:scale-110 transition"
-                                            >
-                                                <Plus size={16} />
-                                            </button>
-                                        </div>
+                                    </Link>
+                                    <div className="px-4 pb-4 flex items-center justify-between">
+                                        <p className="text-green-400 font-bold">₦{Number(p.price).toLocaleString()}</p>
+                                        <button
+                                            onClick={() => addToCart(p)}
+                                            className="bg-white text-black p-2 rounded-xl hover:scale-110 transition"
+                                        >
+                                            <Plus size={16} />
+                                        </button>
                                     </div>
                                 </div>
                             ))}
