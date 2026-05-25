@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { doc, getDoc } from "firebase/firestore";
+import { doc, getDoc, getDocs, collection, query, where } from "firebase/firestore";
 import { db } from "../firebase";
 import { ArrowLeft, MessageCircle, ShoppingCart, Store } from "lucide-react";
 
@@ -14,28 +14,49 @@ export default function ProductDetail() {
     const navigate = useNavigate();
 
     useEffect(() => {
-        const fetch = async () => {
+        const fetchData = async () => {
             try {
-                const [productDoc, vendorDoc] = await Promise.all([
-                    getDoc(doc(db, "products", productId)),
-                    getDoc(doc(db, "vendors", vendor)),
-                ]);
+                // Step 1 — try vendor as UID first
+                let resolvedVendor = null;
+                const vendorByUID = await getDoc(doc(db, "vendors", vendor));
 
-                if (!productDoc.exists() || !vendorDoc.exists()) {
+                if (vendorByUID.exists()) {
+                    resolvedVendor = { id: vendorByUID.id, ...vendorByUID.data() };
+                } else {
+                    // Step 2 — try vendor as slug
+                    const slugSnap = await getDocs(
+                        query(collection(db, "vendors"), where("slug", "==", vendor))
+                    );
+                    if (!slugSnap.empty) {
+                        resolvedVendor = { id: slugSnap.docs[0].id, ...slugSnap.docs[0].data() };
+                    }
+                }
+
+                if (!resolvedVendor) {
+                    setNotFound(true);
+                    setLoading(false);
+                    return;
+                }
+
+                setVendorData(resolvedVendor);
+
+                // Step 3 — fetch product by ID
+                const productDoc = await getDoc(doc(db, "products", productId));
+
+                if (!productDoc.exists()) {
                     setNotFound(true);
                     setLoading(false);
                     return;
                 }
 
                 setProduct({ id: productDoc.id, ...productDoc.data() });
-                setVendorData(vendorDoc.data());
             } catch (err) {
-                console.error(err);
+                console.error("ProductDetail error:", err);
                 setNotFound(true);
             }
             setLoading(false);
         };
-        fetch();
+        fetchData();
     }, [vendor, productId]);
 
     const handleWhatsApp = () => {
@@ -147,7 +168,6 @@ Please confirm availability. Thank you!`;
                                 </div>
                             </div>
 
-                            {/* Total */}
                             {qty > 1 && (
                                 <div className="bg-white/5 rounded-2xl px-5 py-3 mb-6 flex justify-between">
                                     <span className="text-gray-400">Total</span>
