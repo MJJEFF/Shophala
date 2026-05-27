@@ -15,10 +15,20 @@ import {
 import { signOut, onAuthStateChanged } from "firebase/auth";
 import { auth, db } from "../firebase";
 import usePlan from "../hooks/usePlan";
-import { Menu, X, BarChart3, Tag, Settings, LogOut, Copy, Home } from "lucide-react";
+import {
+  ShoppingBag,
+  BarChart3,
+  LogOut,
+  Plus,
+  Trash2,
+  Copy,
+  X,
+  Package,
+  Users,
+  Eye,
+} from "lucide-react";
 
 export default function Dashboard() {
-  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [user, setUser] = useState(null);
   const { plan } = usePlan(user?.uid);
   const [vendor, setVendor] = useState(null);
@@ -185,100 +195,53 @@ export default function Dashboard() {
   return (
     <div className="min-h-screen bg-black text-white">
       {/* Navbar */}
-      <nav className="flex items-center justify-between px-6 py-4 border-b border-white/10 sticky top-0 bg-black z-40">
-        {/* Left — Logo */}
+      <nav className="flex items-center justify-between px-6 md:px-12 py-5 border-b border-white/10">
         <Link to="/">
-          <Logo size={32} />
+          <Logo size={36} />
         </Link>
-
-        {/* Right — Desktop */}
-        <div className="hidden md:flex items-center gap-4">
-          <span className="text-gray-400 text-sm">{vendor?.storeName}</span>
-          <span className={`text-xs px-3 py-1 rounded-full font-semibold ${plan === "pro" ? "bg-blue-500/20 text-blue-400" :
+        <Link
+          to="/analytics"
+          className="text-gray-400 hover:text-white transition text-sm"
+        >
+          Analytics
+        </Link>
+        <Link
+          to="/settings"
+          className="text-gray-400 hover:text-white transition text-sm"
+        >
+          Settings
+        </Link>
+        <Link to="/promo-codes" className="text-gray-400 hover:text-white transition text-sm">
+          Promo Codes
+        </Link>
+        <div className="flex items-center gap-4">
+          <span className="text-gray-400 text-sm hidden sm:block">
+            {vendor?.storeName}
+          </span>
+          <div className="flex items-center gap-3">
+            <span className={`text-xs px-3 py-1 rounded-full font-semibold ${plan === "pro" ? "bg-blue-500/20 text-blue-400" :
               plan === "business" ? "bg-purple-500/20 text-purple-400" :
                 "bg-white/10 text-gray-400"
-            }`}>
-            {plan === "free" ? "Free" : plan === "pro" ? "Pro ⚡" : "Business 🏢"}
-          </span>
-          {plan === "free" && (
-            <Link to="/pricing" className="text-xs bg-green-500 text-white px-3 py-1.5 rounded-full font-semibold hover:bg-green-400 transition">
-              Upgrade ⚡
-            </Link>
-          )}
-          <Link to="/analytics" className="text-gray-400 hover:text-white transition text-sm">Analytics</Link>
-          <Link to="/promo-codes" className="text-gray-400 hover:text-white transition text-sm">Promos</Link>
-          <Link to="/settings" className="text-gray-400 hover:text-white transition text-sm">Settings</Link>
-          <button onClick={handleLogout} className="flex items-center gap-2 text-gray-400 hover:text-white transition text-sm">
-            <LogOut size={18} /> Logout
-          </button>
-        </div>
-
-        {/* Right — Mobile */}
-        <div className="flex md:hidden items-center gap-3">
-          {plan === "free" && (
-            <Link to="/pricing" className="text-xs bg-green-500 text-white px-3 py-1.5 rounded-full font-semibold">
-              Upgrade
-            </Link>
-          )}
-          <button onClick={() => setMobileMenuOpen(!mobileMenuOpen)}>
-            {mobileMenuOpen ? <X size={24} /> : <Menu size={24} />}
-          </button>
-        </div>
-      </nav>
-
-      {/* Mobile Slide-down Menu */}
-      {mobileMenuOpen && (
-        <div className="md:hidden bg-black border-b border-white/10 px-6 py-4 flex flex-col gap-1 z-30">
-          {/* Store info */}
-          <div className="flex items-center justify-between py-3 border-b border-white/10 mb-2">
-            <div>
-              <p className="font-semibold text-sm">{vendor?.storeName}</p>
-              <p className="text-gray-500 text-xs">{user?.email}</p>
-            </div>
-            <span className={`text-xs px-3 py-1 rounded-full font-semibold ${plan === "pro" ? "bg-blue-500/20 text-blue-400" :
-                plan === "business" ? "bg-purple-500/20 text-purple-400" :
-                  "bg-white/10 text-gray-400"
               }`}>
               {plan === "free" ? "Free Plan" : plan === "pro" ? "Pro ⚡" : "Business 🏢"}
             </span>
+            {plan === "free" && (
+              <Link
+                to="/pricing"
+                className="text-xs bg-green-500 text-white px-3 py-1.5 rounded-full font-semibold hover:bg-green-400 transition"
+              >
+                Upgrade ⚡
+              </Link>
+            )}
           </div>
-
-          {/* Copy store link */}
-          <button
-            onClick={() => { copyLink(); setMobileMenuOpen(false); }}
-            className="flex items-center gap-3 py-3 text-gray-300 hover:text-white transition text-sm border-b border-white/5"
-          >
-            <Copy size={18} className="text-gray-500" /> Copy Store Link
-            {copied && <span className="text-green-400 text-xs ml-auto">Copied!</span>}
-          </button>
-
-          {/* Menu items */}
-          {[
-            { label: "Analytics", icon: <BarChart3 size={18} />, href: "/analytics" },
-            { label: "Promo Codes", icon: <Tag size={18} />, href: "/promo-codes" },
-            { label: "Settings", icon: <Settings size={18} />, href: "/settings" },
-            { label: "Home", icon: <Home size={18} />, href: "/" },
-          ].map(item => (
-            <Link
-              key={item.label}
-              to={item.href}
-              onClick={() => setMobileMenuOpen(false)}
-              className="flex items-center gap-3 py-3 text-gray-300 hover:text-white transition text-sm border-b border-white/5"
-            >
-              <span className="text-gray-500">{item.icon}</span>
-              {item.label}
-            </Link>
-          ))}
-
-          {/* Logout */}
           <button
             onClick={handleLogout}
-            className="flex items-center gap-3 py-3 text-red-400 hover:text-red-300 transition text-sm mt-1"
+            className="flex items-center gap-2 text-gray-400 hover:text-white transition text-sm"
           >
             <LogOut size={18} /> Logout
           </button>
         </div>
-      )}
+      </nav>
 
       <div className="max-w-6xl mx-auto px-6 md:px-12 py-10">
         {/* Store Link Banner */}
@@ -409,11 +372,10 @@ export default function Dashboard() {
                     {/* Stock toggle */}
                     <button
                       onClick={() => handleToggleStock(p.id, p.outOfStock)}
-                      className={`text-xs px-3 py-1 rounded-full mb-3 font-semibold transition ${
-                        p.outOfStock
+                      className={`text-xs px-3 py-1 rounded-full mb-3 font-semibold transition ${p.outOfStock
                           ? "bg-red-500/20 text-red-400 hover:bg-red-500/30"
                           : "bg-green-500/20 text-green-400 hover:bg-green-500/30"
-                      }`}
+                        }`}
                     >
                       {p.outOfStock ? "Out of Stock" : "In Stock"}
                     </button>
