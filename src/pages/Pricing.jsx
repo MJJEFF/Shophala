@@ -76,56 +76,60 @@ const plans = [
 function PayButton({ plan, yearly, user }) {
     const amount = yearly ? plan.yearly / 12 : plan.monthly;
 
-    const config = {
-        public_key: FLW_PUBLIC_KEY,
-        tx_ref: `shophala_${plan.planId}_${Date.now()}`,
-        amount,
-        currency: "NGN",
-        payment_options: "card, banktransfer, ussd",
-        customer: {
-            email: user?.email || "",
-            name: user?.displayName || "Shophala Vendor",
-        },
-        customizations: {
-            title: "Shophala",
-            description: `${plan.name} Plan - ${yearly ? "Yearly" : "Monthly"}`,
-            logo: "https://shophala.vercel.app/favicon.ico",
-        },
-    };
+    const handlePayment = () => {
+        if (!user) {
+            window.location.href = "/login";
+            return;
+        }
 
-    const handleFlutterPayment = useFlutterwave(config);
+        const FlutterwaveCheckout = window.FlutterwaveCheckout;
+
+        if (!FlutterwaveCheckout) {
+            alert("Payment system loading. Please try again.");
+            return;
+        }
+
+        FlutterwaveCheckout({
+            public_key: import.meta.env.VITE_FLW_PUBLIC_KEY,
+            tx_ref: `shophala_${plan.planId}_${Date.now()}`,
+            amount,
+            currency: "NGN",
+            payment_options: "card, banktransfer, ussd",
+            customer: {
+                email: user.email,
+                name: user.displayName || "Shophala Vendor",
+            },
+            customizations: {
+                title: "Shophala",
+                description: `${plan.name} Plan`,
+                logo: "https://shophala.vercel.app/favicon.ico",
+            },
+            callback: async (response) => {
+                if (response.status === "successful") {
+                    try {
+                        await setDoc(doc(db, "plans", user.uid), {
+                            plan: plan.planId,
+                            reference: response.transaction_id,
+                            email: user.email,
+                            amount,
+                            yearly,
+                            activatedAt: new Date(),
+                            expiresAt: new Date(Date.now() + (yearly ? 365 : 30) * 24 * 60 * 60 * 1000),
+                        });
+                        alert(`🎉 You are now on the ${plan.name} plan!`);
+                        window.location.href = "/dashboard";
+                    } catch (err) {
+                        alert("Payment received but plan update failed. Contact support.");
+                    }
+                }
+            },
+            onclose: () => console.log("Payment closed"),
+        });
+    };
 
     return (
         <button
-            onClick={() => {
-                if (!user) {
-                    window.location.href = "/login";
-                    return;
-                }
-                handleFlutterPayment({
-                    callback: async (response) => {
-                        if (response.status === "successful") {
-                            await setDoc(doc(db, "plans", user.uid), {
-                                plan: plan.planId,
-                                reference: response.transaction_id,
-                                email: user.email,
-                                amount,
-                                yearly,
-                                activatedAt: new Date(),
-                            });
-                            closePaymentModal();
-                            alert(`🎉 Payment successful! You're now on the ${plan.name} plan.`);
-                            window.location.href = "/dashboard";
-                        } else {
-                            alert("Payment was not completed. Please try again.");
-                            closePaymentModal();
-                        }
-                    },
-                    onClose: () => {
-                        console.log("Payment modal closed");
-                    },
-                });
-            }}
+            onClick={handlePayment}
             className={`w-full py-4 rounded-2xl font-semibold text-sm transition ${plan.ctaStyle}`}
         >
             {plan.cta}

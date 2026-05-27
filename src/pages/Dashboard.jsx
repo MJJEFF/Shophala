@@ -12,6 +12,7 @@ import {
 } from "firebase/firestore";
 import { signOut, onAuthStateChanged } from "firebase/auth";
 import { auth, db } from "../firebase";
+import usePlan from "../hooks/usePlan";
 import {
   ShoppingBag,
   BarChart3,
@@ -26,6 +27,7 @@ import {
 
 export default function Dashboard() {
   const [user, setUser] = useState(null);
+  const { plan } = usePlan(user?.uid);
   const [vendor, setVendor] = useState(null);
   const [products, setProducts] = useState([]);
   const [orders, setOrders] = useState([]);
@@ -82,6 +84,14 @@ export default function Dashboard() {
   }, []);
 
   const handleAddProduct = async () => {
+    // Enforce free plan product limit
+    if (plan === "free" && products.length >= 10) {
+      alert("Free plan is limited to 10 products. Upgrade to Pro for unlimited products.");
+      setShowAddProduct(false);
+      window.location.href = "/pricing";
+      return;
+    }
+
     if (!form.name || !form.price) return;
     setAddingProduct(true);
     setUploadError("");
@@ -183,6 +193,12 @@ export default function Dashboard() {
         <div className="flex items-center gap-4">
           <span className="text-gray-400 text-sm hidden sm:block">
             {vendor?.storeName}
+          </span>
+          <span className={`text-xs px-3 py-1 rounded-full font-semibold ${plan === "pro" ? "bg-blue-500/20 text-blue-400" :
+              plan === "business" ? "bg-purple-500/20 text-purple-400" :
+                "bg-white/10 text-gray-400"
+            }`}>
+            {plan === "free" ? "Free Plan" : plan === "pro" ? "Pro ⚡" : "Business 🏢"}
           </span>
           <button
             onClick={handleLogout}
