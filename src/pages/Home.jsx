@@ -1,6 +1,7 @@
 import { Link } from "react-router-dom";
 import { ShoppingBag, BarChart3, Smartphone, ArrowRight, Menu, X } from "lucide-react";
 import { useState } from "react";
+import Logo from "../components/Logo";
 
 export default function Home() {
     const [menuOpen, setMenuOpen] = useState(false);
@@ -9,7 +10,9 @@ export default function Home() {
         <div className="min-h-screen bg-black text-white overflow-hidden">
             {/* Navbar */}
             <nav className="flex items-center justify-between px-6 md:px-12 py-6 border-b border-white/10">
-                <h1 className="text-2xl font-bold">Shophala</h1>
+                <Link to="/">
+                    <Logo size={36} />
+                </Link>
 
                 {/* Desktop Nav */}
                 <div className="hidden md:flex items-center gap-4">

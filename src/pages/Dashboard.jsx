@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
+import Logo from "../components/Logo";
 import {
   collection,
   addDoc,
@@ -183,7 +184,9 @@ export default function Dashboard() {
     <div className="min-h-screen bg-black text-white">
       {/* Navbar */}
       <nav className="flex items-center justify-between px-6 md:px-12 py-5 border-b border-white/10">
-        <Link to="/" className="text-xl font-bold">Shophala</Link>
+        <Link to="/">
+          <Logo size={36} />
+        </Link>
         <Link
           to="/settings"
           className="text-gray-400 hover:text-white transition text-sm"
@@ -194,12 +197,22 @@ export default function Dashboard() {
           <span className="text-gray-400 text-sm hidden sm:block">
             {vendor?.storeName}
           </span>
-          <span className={`text-xs px-3 py-1 rounded-full font-semibold ${plan === "pro" ? "bg-blue-500/20 text-blue-400" :
-              plan === "business" ? "bg-purple-500/20 text-purple-400" :
-                "bg-white/10 text-gray-400"
-            }`}>
-            {plan === "free" ? "Free Plan" : plan === "pro" ? "Pro ⚡" : "Business 🏢"}
-          </span>
+          <div className="flex items-center gap-3">
+            <span className={`text-xs px-3 py-1 rounded-full font-semibold ${plan === "pro" ? "bg-blue-500/20 text-blue-400" :
+                plan === "business" ? "bg-purple-500/20 text-purple-400" :
+                  "bg-white/10 text-gray-400"
+              }`}>
+              {plan === "free" ? "Free Plan" : plan === "pro" ? "Pro ⚡" : "Business 🏢"}
+            </span>
+            {plan === "free" && (
+              <Link
+                to="/pricing"
+                className="text-xs bg-green-500 text-white px-3 py-1.5 rounded-full font-semibold hover:bg-green-400 transition"
+              >
+                Upgrade ⚡
+              </Link>
+            )}
+          </div>
           <button
             onClick={handleLogout}
             className="flex items-center gap-2 text-gray-400 hover:text-white transition text-sm"

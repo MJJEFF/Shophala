@@ -1,11 +1,14 @@
 import { Link } from "react-router-dom";
+import Logo from "../components/Logo";
 
 export default function Legal() {
     return (
         <div className="min-h-screen bg-black text-white">
             {/* Navbar */}
             <nav className="flex items-center justify-between px-6 md:px-12 py-6 border-b border-white/10">
-                <Link to="/" className="text-2xl font-bold">Shophala</Link>
+                <Link to="/">
+                    <Logo size={36} />
+                </Link>
                 <Link to="/login">
                     <button className="bg-white text-black px-5 py-2.5 rounded-2xl font-semibold text-sm hover:scale-105 transition">
                         Start Selling

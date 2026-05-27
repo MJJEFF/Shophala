@@ -1,6 +1,7 @@
 import { Link } from "react-router-dom";
 import { Check, Zap, Building2, Rocket } from "lucide-react";
 import { useState, useEffect } from "react";
+import Logo from "../components/Logo";
 import { useFlutterwave, closePaymentModal } from "flutterwave-react-v3";
 import { onAuthStateChanged } from "firebase/auth";
 import { doc, setDoc } from "firebase/firestore";
@@ -150,7 +151,9 @@ export default function Pricing() {
         <div className="min-h-screen bg-black text-white">
             {/* Navbar */}
             <nav className="flex items-center justify-between px-6 md:px-12 py-6 border-b border-white/10">
-                <Link to="/" className="text-2xl font-bold">Shophala</Link>
+                <Link to="/">
+                    <Logo size={36} />
+                </Link>
                 <div className="flex items-center gap-4">
                     <Link to="/login" className="text-gray-300 hover:text-white transition text-sm">
                         Login

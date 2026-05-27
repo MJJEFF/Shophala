@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
+import Logo from "../components/Logo";
 import {
     createUserWithEmailAndPassword,
     signInWithEmailAndPassword,
@@ -110,7 +111,9 @@ export default function Login() {
         <div className="min-h-screen bg-black text-white flex flex-col">
             {/* Navbar */}
             <nav className="flex items-center justify-between px-6 md:px-12 py-6 border-b border-white/10">
-                <Link to="/" className="text-2xl font-bold">Shophala</Link>
+                <Link to="/">
+                    <Logo size={36} />
+                </Link>
             </nav>
 
             {/* Form */}
