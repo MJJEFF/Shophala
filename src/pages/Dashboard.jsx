@@ -188,6 +188,12 @@ export default function Dashboard() {
           <Logo size={36} />
         </Link>
         <Link
+          to="/analytics"
+          className="text-gray-400 hover:text-white transition text-sm"
+        >
+          Analytics
+        </Link>
+        <Link
           to="/settings"
           className="text-gray-400 hover:text-white transition text-sm"
         >

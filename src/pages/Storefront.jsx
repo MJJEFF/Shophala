@@ -6,6 +6,7 @@ import { ShoppingCart, Plus, Minus, X, MessageCircle, Store } from "lucide-react
 
 export default function Storefront() {
     const { vendor } = useParams();
+    // vendorData already exists, plan will be inside it
     const [vendorData, setVendorData] = useState(null);
     const [products, setProducts] = useState([]);
     const [cart, setCart] = useState([]);
@@ -48,6 +49,15 @@ export default function Storefront() {
 
                 const vendorData = { id: slugSnap.docs[0].id, ...slugSnap.docs[0].data() };
                 setVendorData(vendorData);
+
+                try {
+                    const planDoc = await getDoc(doc(db, "plans", vendorData.id || slugSnap.docs[0].id));
+                    if (planDoc.exists()) {
+                        setVendorData((prev) => ({ ...prev, plan: planDoc.data().plan }));
+                    }
+                } catch (err) {
+                    console.log("No plan found, defaulting to free");
+                }
 
                 const productSnap = await getDocs(
                     query(collection(db, "products"), where("vendorId", "==", vendorData.id))
@@ -361,12 +371,14 @@ Please confirm my order. Thank you!`;
             )}
 
             {/* Footer */}
-            <footer className="border-t border-white/10 px-6 md:px-12 py-8 text-center text-gray-500 text-sm">
-                <div className="flex flex-col sm:flex-row items-center justify-center gap-2">
-                    <span>© 2025 Shophala. Built for African businesses.</span>
-                    <Link to="/legal" className="hover:text-white transition">Terms & Privacy</Link>
-                </div>
-            </footer>
+            {vendorData?.plan !== "pro" && vendorData?.plan !== "business" && (
+                <footer className="border-t border-white/10 px-6 py-6 text-center text-gray-600 text-xs">
+                    Powered by{" "}
+                    <a href="https://shophala.vercel.app" className="hover:text-white transition">
+                        Shophala
+                    </a>
+                </footer>
+            )}
         </div>
     );
 }

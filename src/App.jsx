@@ -7,6 +7,7 @@ import Home from "./pages/Home";
 import Storefront from "./pages/Storefront";
 import Login from "./pages/Login";
 import Dashboard from "./pages/Dashboard";
+import Analytics from "./pages/Analytics";
 import Pricing from "./pages/Pricing";
 import Legal from "./pages/Legal";
 import Settings from "./pages/Settings";
@@ -42,6 +43,11 @@ export default function App() {
         <Route path="/dashboard" element={
           <ProtectedRoute>
             <Dashboard />
+          </ProtectedRoute>
+        } />
+        <Route path="/analytics" element={
+          <ProtectedRoute>
+            <Analytics />
           </ProtectedRoute>
         } />
         <Route path="/settings" element={
