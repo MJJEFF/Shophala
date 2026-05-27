@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { doc, getDoc, getDocs, collection, query, where } from "firebase/firestore";
 import { db } from "../firebase";
-import { ArrowLeft, MessageCircle, ShoppingCart, Store } from "lucide-react";
+import { ArrowLeft, MessageCircle, ShoppingCart, Store, Share2 } from "lucide-react";
 
 export default function ProductDetail() {
     const { vendor, productId } = useParams();
@@ -187,9 +187,31 @@ Please confirm availability. Thank you!`;
                                 <MessageCircle size={20} />
                                 Order via WhatsApp
                             </button>
+
+                            {/* Share button */}
+                            <button
+                                onClick={() => {
+                                    const url = window.location.href;
+                                    if (navigator.share) {
+                                        navigator.share({
+                                            title: product.name,
+                                            text: `Check out ${product.name} for ₦${Number(product.price).toLocaleString()} on ${vendorData.storeName}`,
+                                            url,
+                                        });
+                                    } else {
+                                        navigator.clipboard.writeText(url);
+                                        alert("Product link copied! Share it anywhere.");
+                                    }
+                                }}
+                                className="border border-white/20 py-4 rounded-2xl font-semibold flex items-center justify-center gap-2 hover:bg-white/10 transition"
+                            >
+                                <Share2 size={20} />
+                                Share Product
+                            </button>
+
                             <button
                                 onClick={() => navigate(`/store/${vendor}`)}
-                                className="border border-white/20 py-4 rounded-2xl font-semibold flex items-center justify-center gap-2 hover:bg-white/10 transition"
+                                className="border border-white/20 py-4 rounded-2xl font-semibold flex items-center justify-center gap-2 hover:bg-white/10 transition text-gray-400"
                             >
                                 <ShoppingCart size={20} />
                                 Continue Shopping

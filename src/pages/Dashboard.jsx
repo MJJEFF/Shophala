@@ -10,6 +10,7 @@ import {
   deleteDoc,
   doc,
   getDoc,
+  updateDoc,
 } from "firebase/firestore";
 import { signOut, onAuthStateChanged } from "firebase/auth";
 import { auth, db } from "../firebase";
@@ -160,6 +161,16 @@ export default function Dashboard() {
   const handleLogout = async () => {
     await signOut(auth);
     navigate("/");
+  };
+
+  const handleToggleStock = async (id, currentStatus) => {
+    const { updateDoc } = await import("firebase/firestore");
+    await updateDoc(doc(db, "products", id), {
+      outOfStock: !currentStatus,
+    });
+    setProducts(prev =>
+      prev.map(p => p.id === id ? { ...p, outOfStock: !currentStatus } : p)
+    );
   };
 
   const storeLink = `${window.location.origin}/store/${vendor?.slug || user?.uid}`;
@@ -352,6 +363,19 @@ export default function Dashboard() {
                     )}
                     <h4 className="font-bold mb-1">{p.name}</h4>
                     <p className="text-gray-400 text-sm mb-3 line-clamp-2">{p.description}</p>
+
+                    {/* Stock toggle */}
+                    <button
+                      onClick={() => handleToggleStock(p.id, p.outOfStock)}
+                      className={`text-xs px-3 py-1 rounded-full mb-3 font-semibold transition ${
+                        p.outOfStock
+                          ? "bg-red-500/20 text-red-400 hover:bg-red-500/30"
+                          : "bg-green-500/20 text-green-400 hover:bg-green-500/30"
+                      }`}
+                    >
+                      {p.outOfStock ? "Out of Stock" : "In Stock"}
+                    </button>
+
                     <div className="flex items-center justify-between">
                       <p className="text-green-400 font-bold">
                         ₦{Number(p.price).toLocaleString()}

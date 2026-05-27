@@ -2,12 +2,14 @@ import { useEffect, useState } from "react";
 import { Link, useParams } from "react-router-dom";
 import { collection, getDocs, query, where, getDoc, doc } from "firebase/firestore";
 import { db } from "../firebase";
-import { ShoppingCart, Plus, Minus, X, MessageCircle, Store } from "lucide-react";
+import { ShoppingCart, Plus, Minus, X, MessageCircle, Store, Search, Share2 } from "lucide-react";
 
 export default function Storefront() {
     const { vendor } = useParams();
     // vendorData already exists, plan will be inside it
     const [vendorData, setVendorData] = useState(null);
+    const [search, setSearch] = useState("");
+    const [selectedCategory, setSelectedCategory] = useState("All");
     const [products, setProducts] = useState([]);
     const [cart, setCart] = useState([]);
     const [showCart, setShowCart] = useState(false);
@@ -18,6 +20,15 @@ export default function Storefront() {
         name: "",
         phone: "",
         address: "",
+    });
+
+    const categories = ["All", ...new Set(products.map(p => p.category).filter(Boolean))];
+
+    const filteredProducts = products.filter(p => {
+        const matchesSearch = p.name.toLowerCase().includes(search.toLowerCase()) ||
+            p.description?.toLowerCase().includes(search.toLowerCase());
+        const matchesCategory = selectedCategory === "All" || p.category === selectedCategory;
+        return matchesSearch && matchesCategory;
     });
 
     useEffect(() => {
@@ -177,13 +188,69 @@ Please confirm my order. Thank you!`;
                     </div>
                 ) : (
                     <>
-                        <h2 className="text-2xl font-bold mb-8">Products</h2>
+                        <h2 className="text-2xl font-bold mb-6">Products</h2>
+
+                        {/* Search */}
+                        <div className="relative mb-4">
+                            <input
+                                type="text"
+                                placeholder="Search products..."
+                                value={search}
+                                onChange={(e) => setSearch(e.target.value)}
+                                className="w-full bg-white/5 border border-white/10 rounded-2xl px-5 py-4 text-white placeholder-gray-500 focus:outline-none focus:border-white/30 transition pr-12"
+                            />
+                            <Search size={18} className="absolute right-5 top-1/2 -translate-y-1/2 text-gray-500" />
+                        </div>
+
+                        {/* Category Filter */}
+                        {categories.length > 1 && (
+                            <div className="flex gap-2 flex-wrap mb-8">
+                                {categories.map(cat => (
+                                    <button
+                                        key={cat}
+                                        onClick={() => setSelectedCategory(cat)}
+                                        className={`px-4 py-2 rounded-full text-sm font-semibold transition ${
+                                            selectedCategory === cat
+                                                ? "bg-green-500 text-white"
+                                                : "bg-white/5 text-gray-400 hover:bg-white/10"
+                                        }`}
+                                    >
+                                        {cat}
+                                    </button>
+                                ))}
+                            </div>
+                        )}
+
+                        {/* No results */}
+                        {filteredProducts.length === 0 && (
+                            <div className="text-center py-16 text-gray-500">
+                                <p>No products found for "{search}"</p>
+                                <button
+                                    onClick={() => { setSearch(""); setSelectedCategory("All"); }}
+                                    className="text-green-400 mt-2 text-sm hover:underline"
+                                >
+                                    Clear search
+                                </button>
+                            </div>
+                        )}
+
+                        {/* Products Grid */}
                         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-5">
-                            {products.map((p) => (
-                                <div key={p.id} className="bg-white/5 border border-white/10 rounded-2xl overflow-hidden hover:border-white/30 transition group">
+                            {filteredProducts.map((p) => (
+                                <div
+                                    key={p.id}
+                                    className={`bg-white/5 border rounded-2xl overflow-hidden hover:border-white/30 transition group ${
+                                        p.outOfStock ? "opacity-60" : "border-white/10"
+                                    }`}
+                                >
                                     <Link to={`/store/${vendor}/product/${p.id}`}>
                                         {p.image ? (
-                                            <img src={p.image} alt={p.name} className="w-full h-44 object-cover group-hover:scale-105 transition duration-300" />
+                                            <img
+                                                src={p.image}
+                                                alt={p.name}
+                                                className="w-full h-44 object-cover group-hover:scale-105 transition duration-300"
+                                                loading="lazy"
+                                            />
                                         ) : (
                                             <div className="w-full h-44 bg-white/5 flex items-center justify-center">
                                                 <Store size={32} className="text-gray-600" />
@@ -191,17 +258,41 @@ Please confirm my order. Thank you!`;
                                         )}
                                         <div className="p-4">
                                             <h3 className="font-bold mb-1 truncate">{p.name}</h3>
-                                            <p className="text-gray-400 text-xs mb-3 line-clamp-2">{p.description}</p>
+                                            <p className="text-gray-400 text-xs mb-2 line-clamp-2">{p.description}</p>
+                                            {p.outOfStock && (
+                                                <span className="text-xs bg-red-500/20 text-red-400 px-2 py-0.5 rounded-full">
+                                                    Out of stock
+                                                </span>
+                                            )}
                                         </div>
                                     </Link>
                                     <div className="px-4 pb-4 flex items-center justify-between">
                                         <p className="text-green-400 font-bold">₦{Number(p.price).toLocaleString()}</p>
-                                        <button
-                                            onClick={() => addToCart(p)}
-                                            className="bg-white text-black p-2 rounded-xl hover:scale-110 transition"
-                                        >
-                                            <Plus size={16} />
-                                        </button>
+                                        <div className="flex items-center gap-2">
+                                            {/* Share button */}
+                                            <button
+                                                onClick={() => {
+                                                    const url = `${window.location.origin}/store/${vendor}/product/${p.id}`;
+                                                    if (navigator.share) {
+                                                        navigator.share({ title: p.name, text: `Check out ${p.name} — ₦${Number(p.price).toLocaleString()}`, url });
+                                                    } else {
+                                                        navigator.clipboard.writeText(url);
+                                                        alert("Product link copied!");
+                                                    }
+                                                }}
+                                                className="bg-white/10 p-2 rounded-xl hover:bg-white/20 transition"
+                                            >
+                                                <Share2 size={14} />
+                                            </button>
+                                            {!p.outOfStock && (
+                                                <button
+                                                    onClick={() => addToCart(p)}
+                                                    className="bg-white text-black p-2 rounded-xl hover:scale-110 transition"
+                                                >
+                                                    <Plus size={16} />
+                                                </button>
+                                            )}
+                                        </div>
                                     </div>
                                 </div>
                             ))}
