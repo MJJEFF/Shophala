@@ -25,6 +25,7 @@ import {
   X,
   Package,
   Users,
+  Eye,
 } from "lucide-react";
 
 export default function Dashboard() {
@@ -210,6 +211,9 @@ export default function Dashboard() {
         >
           Settings
         </Link>
+        <Link to="/promo-codes" className="text-gray-400 hover:text-white transition text-sm">
+          Promo Codes
+        </Link>
         <div className="flex items-center gap-4">
           <span className="text-gray-400 text-sm hidden sm:block">
             {vendor?.storeName}
@@ -264,6 +268,7 @@ export default function Dashboard() {
             { label: "Orders", value: orders.length, icon: <ShoppingBag size={20} /> },
             { label: "Products", value: products.length, icon: <Package size={20} /> },
             { label: "Customers", value: [...new Set(orders.map((o) => o.customerPhone))].length, icon: <Users size={20} /> },
+            { label: "Store Visits", value: vendor?.visitCount || 0, icon: <Eye size={20} /> },
           ].map((s) => (
             <div key={s.label} className="bg-white/5 border border-white/10 rounded-2xl p-5">
               <div className="flex items-center gap-2 text-gray-400 mb-3 text-sm">

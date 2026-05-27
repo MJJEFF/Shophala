@@ -12,6 +12,7 @@ import Pricing from "./pages/Pricing";
 import Legal from "./pages/Legal";
 import Settings from "./pages/Settings";
 import ProductDetail from "./pages/ProductDetail";
+import PromoCodes from "./pages/PromoCodes";
 
 function ProtectedRoute({ children }) {
   const [user, setUser] = useState(undefined);
@@ -53,6 +54,11 @@ export default function App() {
         <Route path="/settings" element={
           <ProtectedRoute>
             <Settings />
+          </ProtectedRoute>
+        } />
+        <Route path="/promocodes" element={
+          <ProtectedRoute>
+            <PromoCodes />
           </ProtectedRoute>
         } />
       </Routes>

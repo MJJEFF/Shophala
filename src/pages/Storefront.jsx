@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { Link, useParams } from "react-router-dom";
-import { collection, getDocs, query, where, getDoc, doc } from "firebase/firestore";
+import { collection, getDocs, query, where, getDoc, doc, increment } from "firebase/firestore";
 import { db } from "../firebase";
 import { ShoppingCart, Plus, Minus, X, MessageCircle, Store, Search, Share2 } from "lucide-react";
 
@@ -21,6 +21,9 @@ export default function Storefront() {
         phone: "",
         address: "",
     });
+    const [promoCode, setPromoCode] = useState("");
+    const [promoError, setPromoError] = useState("");
+    const [promoApplied, setPromoApplied] = useState(null);
 
     const categories = ["All", ...new Set(products.map(p => p.category).filter(Boolean))];
 
@@ -38,9 +41,18 @@ export default function Storefront() {
                 const vendorDoc = await getDoc(doc(db, "vendors", vendor));
 
                 if (vendorDoc.exists()) {
-                    setVendorData({ id: vendorDoc.id, ...vendorDoc.data() });
+                    const vendorData = { id: vendorDoc.id, ...vendorDoc.data() };
+                    setVendorData(vendorData);
+                    try {
+                        const { updateDoc, increment } = await import("firebase/firestore");
+                        await updateDoc(doc(db, "vendors", vendorData.id), {
+                            visitCount: increment(1),
+                        });
+                    } catch (err) {
+                        console.log("Visit count update failed silently");
+                    }
                     const productSnap = await getDocs(
-                        query(collection(db, "products"), where("vendorId", "==", vendorDoc.id))
+                        query(collection(db, "products"), where("vendorId", "==", vendorData.id))
                     );
                     setProducts(productSnap.docs.map((d) => ({ id: d.id, ...d.data() })));
                     setLoading(false);
@@ -60,6 +72,14 @@ export default function Storefront() {
 
                 const vendorData = { id: slugSnap.docs[0].id, ...slugSnap.docs[0].data() };
                 setVendorData(vendorData);
+                try {
+                    const { updateDoc, increment } = await import("firebase/firestore");
+                    await updateDoc(doc(db, "vendors", vendorData.id), {
+                        visitCount: increment(1),
+                    });
+                } catch (err) {
+                    console.log("Visit count update failed silently");
+                }
 
                 try {
                     const planDoc = await getDoc(doc(db, "plans", vendorData.id || slugSnap.docs[0].id));
@@ -109,12 +129,44 @@ export default function Storefront() {
     const cartTotal = cart.reduce((sum, i) => sum + i.price * i.qty, 0);
     const cartCount = cart.reduce((sum, i) => sum + i.qty, 0);
 
+    const discount = promoApplied
+        ? promoApplied.type === "percent"
+            ? (cartTotal * promoApplied.discount) / 100
+            : promoApplied.discount
+        : 0;
+    const finalTotal = Math.max(0, cartTotal - discount);
+
+    const handleApplyPromo = async () => {
+        setPromoError("");
+        if (!promoCode) return;
+        try {
+            const snap = await getDocs(
+                query(
+                    collection(db, "promoCodes"),
+                    where("code", "==", promoCode),
+                    where("vendorId", "==", vendorData.id)
+                )
+            );
+            if (snap.empty) {
+                setPromoError("Invalid promo code.");
+                return;
+            }
+            setPromoApplied({ id: snap.docs[0].id, ...snap.docs[0].data() });
+        } catch (err) {
+            setPromoError("Failed to apply code. Try again.");
+        }
+    };
+
     const handleWhatsAppCheckout = () => {
         if (!customerForm.name || !customerForm.phone) return;
 
         const itemsList = cart
             .map((i) => `• ${i.name} x${i.qty} — ₦${(i.price * i.qty).toLocaleString()}`)
             .join("\n");
+
+        const discountText = promoApplied
+            ? `\n*Promo:* ${promoApplied.type === "percent" ? `${promoApplied.discount}% off` : `₦${promoApplied.discount} off`}`
+            : "";
 
         const message = `Hello! I'd like to place an order from your Shophala store 🛍️
 
@@ -124,9 +176,9 @@ Phone: ${customerForm.phone}
 ${customerForm.address ? `Address: ${customerForm.address}` : ""}
 
 *Order Summary:*
-${itemsList}
+${itemsList}${discountText}
 
-*Total: ₦${cartTotal.toLocaleString()}*
+*Total: ₦${finalTotal.toLocaleString()}*
 
 Please confirm my order. Thank you!`;
 
@@ -366,7 +418,7 @@ Please confirm my order. Thank you!`;
                                     <div className="flex justify-between mb-4">
                                         <span className="text-gray-400">Total</span>
                                         <span className="font-bold text-xl">
-                                            ₦{cartTotal.toLocaleString()}
+                                            ₦{finalTotal.toLocaleString()}
                                         </span>
                                     </div>
                                     <button
@@ -440,13 +492,47 @@ Please confirm my order. Thank you!`;
                                         </span>
                                     </div>
                                 ))}
+                                {promoApplied && (
+                                    <div className="flex justify-between pt-3 text-sm text-gray-300">
+                                        <span>Promo discount</span>
+                                        <span className="text-green-400">
+                                            {promoApplied.type === "percent"
+                                                ? `-₦${discount.toLocaleString()} (${promoApplied.discount}%)`
+                                                : `-₦${discount.toLocaleString()}`}
+                                        </span>
+                                    </div>
+                                )}
                                 <div className="flex justify-between pt-3 border-t border-white/10 mt-2">
                                     <span className="font-bold">Total</span>
                                     <span className="font-bold text-green-400">
-                                        ₦{cartTotal.toLocaleString()}
+                                        ₦{finalTotal.toLocaleString()}
                                     </span>
                                 </div>
                             </div>
+
+                            {/* Promo Code */}
+                            <div className="flex gap-2">
+                                <input
+                                    placeholder="Promo code"
+                                    value={promoCode}
+                                    onChange={(e) => setPromoCode(e.target.value.toUpperCase())}
+                                    className="flex-1 bg-white/5 border border-white/10 rounded-2xl px-4 py-3 text-white placeholder-gray-500 focus:outline-none focus:border-white/30 transition text-sm"
+                                />
+                                <button
+                                    onClick={handleApplyPromo}
+                                    className="bg-white/10 px-4 py-3 rounded-2xl text-sm font-semibold hover:bg-white/20 transition"
+                                >
+                                    Apply
+                                </button>
+                            </div>
+                            {promoError && <p className="text-red-400 text-xs">{promoError}</p>}
+                            {promoApplied && (
+                                <p className="text-green-400 text-xs">
+                                    ✓ {promoApplied.type === "percent"
+                                        ? `${promoApplied.discount}% discount applied!`
+                                        : `₦${promoApplied.discount} discount applied!`}
+                                </p>
+                            )}
 
                             <button
                                 onClick={handleWhatsAppCheckout}
