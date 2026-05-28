@@ -10,9 +10,9 @@ import Dashboard from "./pages/Dashboard";
 import Analytics from "./pages/Analytics";
 import Pricing from "./pages/Pricing";
 import Legal from "./pages/Legal";
+import PromoCodes from "./pages/PromoCodes";
 import Settings from "./pages/Settings";
 import ProductDetail from "./pages/ProductDetail";
-import PromoCodes from "./pages/PromoCodes";
 
 function ProtectedRoute({ children }) {
   const [user, setUser] = useState(undefined);
