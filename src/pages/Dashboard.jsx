@@ -26,6 +26,9 @@ import {
   Package,
   Users,
   Eye,
+  Menu,
+  Settings,
+  Tag,
 } from "lucide-react";
 
 export default function Dashboard() {
@@ -42,6 +45,7 @@ export default function Dashboard() {
   const [uploadProgress, setUploadProgress] = useState(0);
   const [addingProduct, setAddingProduct] = useState(false);
   const [uploadError, setUploadError] = useState("");
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [form, setForm] = useState({
     name: "",
     price: "",
@@ -57,19 +61,15 @@ export default function Dashboard() {
         navigate("/login");
         return;
       }
-
       if (!mounted) return;
       setUser(u);
-
       try {
         const [vendorDoc, productSnap, orderSnap] = await Promise.all([
           getDoc(doc(db, "vendors", u.uid)),
           getDocs(query(collection(db, "products"), where("vendorId", "==", u.uid))),
           getDocs(query(collection(db, "orders"), where("vendorId", "==", u.uid))),
         ]);
-
         if (!mounted) return;
-
         if (vendorDoc.exists()) setVendor(vendorDoc.data());
         setProducts(productSnap.docs.map((d) => ({ id: d.id, ...d.data() })));
         setOrders(orderSnap.docs.map((d) => ({ id: d.id, ...d.data() })));
@@ -79,7 +79,6 @@ export default function Dashboard() {
         if (mounted) setLoading(false);
       }
     });
-
     return () => {
       mounted = false;
       unsub();
@@ -87,14 +86,12 @@ export default function Dashboard() {
   }, []);
 
   const handleAddProduct = async () => {
-    // Enforce free plan product limit
     if (plan === "free" && products.length >= 10) {
-      alert("Free plan is limited to 10 products. Upgrade to Pro for unlimited products.");
-      setShowAddProduct(false);
-      window.location.href = "/pricing";
+      if (confirm("Free plan is limited to 10 products. Upgrade to Pro?")) {
+        window.location.href = "/pricing";
+      }
       return;
     }
-
     if (!form.name || !form.price) return;
     setAddingProduct(true);
     setUploadError("");
@@ -106,15 +103,12 @@ export default function Dashboard() {
         setUploadProgress(20);
         const formData = new FormData();
         formData.append("image", imageFile);
-
         const res = await fetch(
           `https://api.imgbb.com/1/upload?key=${import.meta.env.VITE_IMGBB_API_KEY}`,
           { method: "POST", body: formData }
         );
-
         const data = await res.json();
         setUploadProgress(80);
-
         if (data.success) {
           imageUrl = data.data.display_url;
           setUploadProgress(100);
@@ -138,7 +132,6 @@ export default function Dashboard() {
         vendorId: user.uid,
         createdAt: new Date(),
       };
-
       const docRef = await addDoc(collection(db, "products"), newProduct);
       setProducts((prev) => [...prev, { id: docRef.id, ...newProduct }]);
       setForm({ name: "", price: "", description: "", category: "" });
@@ -165,12 +158,9 @@ export default function Dashboard() {
   };
 
   const handleToggleStock = async (id, currentStatus) => {
-    const { updateDoc } = await import("firebase/firestore");
-    await updateDoc(doc(db, "products", id), {
-      outOfStock: !currentStatus,
-    });
-    setProducts(prev =>
-      prev.map(p => p.id === id ? { ...p, outOfStock: !currentStatus } : p)
+    await updateDoc(doc(db, "products", id), { outOfStock: !currentStatus });
+    setProducts((prev) =>
+      prev.map((p) => p.id === id ? { ...p, outOfStock: !currentStatus } : p)
     );
   };
 
@@ -188,52 +178,37 @@ export default function Dashboard() {
     return (
       <div className="min-h-screen bg-black text-white flex flex-col items-center justify-center gap-4">
         <div className="w-8 h-8 border-2 border-white/20 border-t-white rounded-full animate-spin" />
-        <p className="text-gray-400">Loading your store... Please wait.</p>
+        <p className="text-gray-400">Loading your store...</p>
       </div>
     );
 
   return (
     <div className="min-h-screen bg-black text-white">
+
       {/* Navbar */}
-      <nav className="flex items-center justify-between px-6 md:px-12 py-5 border-b border-white/10">
+      <nav className="flex items-center justify-between px-6 py-4 border-b border-white/10 sticky top-0 bg-black z-40">
+        {/* Logo */}
         <Link to="/">
-          <Logo size={36} />
+          <Logo size={32} />
         </Link>
-        <Link
-          to="/analytics"
-          className="text-gray-400 hover:text-white transition text-sm"
-        >
-          Analytics
-        </Link>
-        <Link
-          to="/settings"
-          className="text-gray-400 hover:text-white transition text-sm"
-        >
-          Settings
-        </Link>
-        <Link to="/promo-codes" className="text-gray-400 hover:text-white transition text-sm">
-          Promo Codes
-        </Link>
-        <div className="flex items-center gap-4">
-          <span className="text-gray-400 text-sm hidden sm:block">
-            {vendor?.storeName}
-          </span>
-          <div className="flex items-center gap-3">
-            <span className={`text-xs px-3 py-1 rounded-full font-semibold ${plan === "pro" ? "bg-blue-500/20 text-blue-400" :
+
+        {/* Desktop Nav */}
+        <div className="hidden md:flex items-center gap-4">
+          <span className="text-gray-400 text-sm">{vendor?.storeName}</span>
+          <span className={`text-xs px-3 py-1 rounded-full font-semibold ${plan === "pro" ? "bg-blue-500/20 text-blue-400" :
               plan === "business" ? "bg-purple-500/20 text-purple-400" :
                 "bg-white/10 text-gray-400"
-              }`}>
-              {plan === "free" ? "Free Plan" : plan === "pro" ? "Pro ⚡" : "Business 🏢"}
-            </span>
-            {plan === "free" && (
-              <Link
-                to="/pricing"
-                className="text-xs bg-green-500 text-white px-3 py-1.5 rounded-full font-semibold hover:bg-green-400 transition"
-              >
-                Upgrade ⚡
-              </Link>
-            )}
-          </div>
+            }`}>
+            {plan === "free" ? "Free Plan" : plan === "pro" ? "Pro ⚡" : "Business 🏢"}
+          </span>
+          {plan === "free" && (
+            <Link to="/pricing" className="text-xs bg-green-500 text-white px-3 py-1.5 rounded-full font-semibold hover:bg-green-400 transition">
+              Upgrade ⚡
+            </Link>
+          )}
+          <Link to="/analytics" className="text-gray-400 hover:text-white transition text-sm">Analytics</Link>
+          <Link to="/promo-codes" className="text-gray-400 hover:text-white transition text-sm">Promos</Link>
+          <Link to="/settings" className="text-gray-400 hover:text-white transition text-sm">Settings</Link>
           <button
             onClick={handleLogout}
             className="flex items-center gap-2 text-gray-400 hover:text-white transition text-sm"
@@ -241,7 +216,73 @@ export default function Dashboard() {
             <LogOut size={18} /> Logout
           </button>
         </div>
+
+        {/* Mobile Nav */}
+        <div className="flex md:hidden items-center gap-3">
+          {plan === "free" && (
+            <Link to="/pricing" className="text-xs bg-green-500 text-white px-3 py-1.5 rounded-full font-semibold">
+              Upgrade
+            </Link>
+          )}
+          <button onClick={() => setMobileMenuOpen(!mobileMenuOpen)}>
+            {mobileMenuOpen ? <X size={24} /> : <Menu size={24} />}
+          </button>
+        </div>
       </nav>
+
+      {/* Mobile Dropdown */}
+      {mobileMenuOpen && (
+        <div className="md:hidden bg-black border-b border-white/10 px-6 py-4 flex flex-col gap-1 sticky top-[65px] z-30">
+          {/* Store info */}
+          <div className="flex items-center justify-between py-3 border-b border-white/10 mb-2">
+            <div>
+              <p className="font-semibold text-sm">{vendor?.storeName}</p>
+              <p className="text-gray-500 text-xs">{user?.email}</p>
+            </div>
+            <span className={`text-xs px-3 py-1 rounded-full font-semibold ${plan === "pro" ? "bg-blue-500/20 text-blue-400" :
+                plan === "business" ? "bg-purple-500/20 text-purple-400" :
+                  "bg-white/10 text-gray-400"
+              }`}>
+              {plan === "free" ? "Free" : plan === "pro" ? "Pro ⚡" : "Business 🏢"}
+            </span>
+          </div>
+
+          {/* Copy link */}
+          <button
+            onClick={() => { copyLink(); setMobileMenuOpen(false); }}
+            className="flex items-center gap-3 py-3 text-gray-300 hover:text-white transition text-sm border-b border-white/5"
+          >
+            <Copy size={18} className="text-gray-500" />
+            Copy Store Link
+            {copied && <span className="text-green-400 text-xs ml-auto">Copied!</span>}
+          </button>
+
+          {/* Links */}
+          {[
+            { label: "Analytics", href: "/analytics", icon: <BarChart3 size={18} className="text-gray-500" /> },
+            { label: "Promo Codes", href: "/promo-codes", icon: <Tag size={18} className="text-gray-500" /> },
+            { label: "Settings", href: "/settings", icon: <Settings size={18} className="text-gray-500" /> },
+          ].map((item) => (
+            <Link
+              key={item.label}
+              to={item.href}
+              onClick={() => setMobileMenuOpen(false)}
+              className="flex items-center gap-3 py-3 text-gray-300 hover:text-white transition text-sm border-b border-white/5"
+            >
+              {item.icon}
+              {item.label}
+            </Link>
+          ))}
+
+          {/* Logout */}
+          <button
+            onClick={handleLogout}
+            className="flex items-center gap-3 py-3 text-red-400 hover:text-red-300 transition text-sm mt-1"
+          >
+            <LogOut size={18} /> Logout
+          </button>
+        </div>
+      )}
 
       <div className="max-w-6xl mx-auto px-6 md:px-12 py-10">
         {/* Store Link Banner */}
@@ -262,7 +303,7 @@ export default function Dashboard() {
         </div>
 
         {/* Stats */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-10">
+        <div className="grid grid-cols-2 md:grid-cols-5 gap-4 mb-10">
           {[
             { label: "Revenue", value: `₦${totalRevenue.toLocaleString()}`, icon: <BarChart3 size={20} /> },
             { label: "Orders", value: orders.length, icon: <ShoppingBag size={20} /> },
@@ -307,9 +348,7 @@ export default function Dashboard() {
                       <p className="font-semibold text-sm">{o.customerName}</p>
                       <p className="text-gray-500 text-xs">{o.customerPhone}</p>
                     </div>
-                    <p className="text-green-400 font-bold text-sm">
-                      ₦{o.total?.toLocaleString()}
-                    </p>
+                    <p className="text-green-400 font-bold text-sm">₦{o.total?.toLocaleString()}</p>
                   </div>
                 ))
               )}
@@ -322,9 +361,7 @@ export default function Dashboard() {
                 products.slice(0, 5).map((p) => (
                   <div key={p.id} className="flex justify-between items-center py-3 border-b border-white/5 last:border-0">
                     <p className="font-semibold text-sm">{p.name}</p>
-                    <p className="text-white font-bold text-sm">
-                      ₦{Number(p.price).toLocaleString()}
-                    </p>
+                    <p className="text-white font-bold text-sm">₦{Number(p.price).toLocaleString()}</p>
                   </div>
                 ))
               )}
@@ -344,7 +381,6 @@ export default function Dashboard() {
                 <Plus size={18} /> Add Product
               </button>
             </div>
-
             {products.length === 0 ? (
               <div className="text-center py-20 text-gray-500">
                 <Package size={48} className="mx-auto mb-4 opacity-30" />
@@ -355,12 +391,7 @@ export default function Dashboard() {
                 {products.map((p) => (
                   <div key={p.id} className="bg-white/5 border border-white/10 rounded-2xl p-5">
                     {p.image ? (
-                      <img
-                        src={p.image}
-                        alt={p.name}
-                        className="w-full h-40 object-cover rounded-xl mb-4"
-                        loading="lazy"
-                      />
+                      <img src={p.image} alt={p.name} className="w-full h-40 object-cover rounded-xl mb-4" loading="lazy" />
                     ) : (
                       <div className="w-full h-40 bg-white/5 rounded-xl mb-4 flex items-center justify-center">
                         <Package size={32} className="text-gray-600" />
@@ -368,8 +399,6 @@ export default function Dashboard() {
                     )}
                     <h4 className="font-bold mb-1">{p.name}</h4>
                     <p className="text-gray-400 text-sm mb-3 line-clamp-2">{p.description}</p>
-
-                    {/* Stock toggle */}
                     <button
                       onClick={() => handleToggleStock(p.id, p.outOfStock)}
                       className={`text-xs px-3 py-1 rounded-full mb-3 font-semibold transition ${p.outOfStock
@@ -379,15 +408,9 @@ export default function Dashboard() {
                     >
                       {p.outOfStock ? "Out of Stock" : "In Stock"}
                     </button>
-
                     <div className="flex items-center justify-between">
-                      <p className="text-green-400 font-bold">
-                        ₦{Number(p.price).toLocaleString()}
-                      </p>
-                      <button
-                        onClick={() => handleDelete(p.id)}
-                        className="text-red-400 hover:text-red-300 transition"
-                      >
+                      <p className="text-green-400 font-bold">₦{Number(p.price).toLocaleString()}</p>
+                      <button onClick={() => handleDelete(p.id)} className="text-red-400 hover:text-red-300 transition">
                         <Trash2 size={18} />
                       </button>
                     </div>
@@ -414,17 +437,11 @@ export default function Dashboard() {
                     <div>
                       <p className="font-bold">{o.customerName}</p>
                       <p className="text-gray-400 text-sm">{o.customerPhone}</p>
-                      <p className="text-gray-500 text-xs mt-1">
-                        {o.items?.map((i) => i.name).join(", ")}
-                      </p>
+                      <p className="text-gray-500 text-xs mt-1">{o.items?.map((i) => i.name).join(", ")}</p>
                     </div>
                     <div className="text-right">
-                      <p className="text-green-400 font-bold text-lg">
-                        ₦{o.total?.toLocaleString()}
-                      </p>
-                      <span className="text-xs bg-green-500/20 text-green-400 px-3 py-1 rounded-full">
-                        WhatsApp Order
-                      </span>
+                      <p className="text-green-400 font-bold text-lg">₦{o.total?.toLocaleString()}</p>
+                      <span className="text-xs bg-green-500/20 text-green-400 px-3 py-1 rounded-full">WhatsApp Order</span>
                     </div>
                   </div>
                 ))}
@@ -457,39 +474,24 @@ export default function Dashboard() {
                 <X size={24} className="text-gray-400 hover:text-white" />
               </button>
             </div>
-
             <div className="flex flex-col gap-4">
-              {/* Image Upload */}
               <div>
-                <label className="block text-gray-400 text-sm mb-2">
-                  Product Image (optional)
-                </label>
+                <label className="block text-gray-400 text-sm mb-2">Product Image (optional)</label>
                 <input
                   type="file"
                   accept="image/*"
-                  onChange={(e) => {
-                    setImageFile(e.target.files[0]);
-                    setUploadError("");
-                  }}
+                  onChange={(e) => { setImageFile(e.target.files[0]); setUploadError(""); }}
                   className="w-full text-gray-400 text-sm file:mr-4 file:py-2 file:px-4 file:rounded-xl file:border-0 file:bg-white/10 file:text-white hover:file:bg-white/20 transition cursor-pointer"
                 />
                 {imageFile && (
-                  <img
-                    src={URL.createObjectURL(imageFile)}
-                    alt="preview"
-                    className="mt-3 w-full h-40 object-cover rounded-xl"
-                  />
+                  <img src={URL.createObjectURL(imageFile)} alt="preview" className="mt-3 w-full h-40 object-cover rounded-xl" />
                 )}
                 {uploadProgress > 0 && uploadProgress < 100 && (
                   <div className="mt-2 bg-white/10 rounded-full h-2">
-                    <div
-                      className="bg-green-500 h-2 rounded-full transition-all duration-300"
-                      style={{ width: `${uploadProgress}%` }}
-                    />
+                    <div className="bg-green-500 h-2 rounded-full transition-all duration-300" style={{ width: `${uploadProgress}%` }} />
                   </div>
                 )}
               </div>
-
               <input
                 name="name"
                 placeholder="Product Name *"
@@ -520,11 +522,7 @@ export default function Dashboard() {
                 rows={3}
                 className="bg-white/5 border border-white/10 rounded-2xl px-5 py-4 text-white placeholder-gray-500 focus:outline-none focus:border-white/30 transition resize-none"
               />
-
-              {uploadError && (
-                <p className="text-red-400 text-sm">{uploadError}</p>
-              )}
-
+              {uploadError && <p className="text-red-400 text-sm">{uploadError}</p>}
               <button
                 onClick={handleAddProduct}
                 disabled={addingProduct || !form.name || !form.price}
@@ -535,9 +533,7 @@ export default function Dashboard() {
                     <div className="w-4 h-4 border-2 border-black/20 border-t-black rounded-full animate-spin" />
                     {imageFile ? "Uploading image..." : "Adding product..."}
                   </>
-                ) : (
-                  "Add Product"
-                )}
+                ) : "Add Product"}
               </button>
             </div>
           </div>
