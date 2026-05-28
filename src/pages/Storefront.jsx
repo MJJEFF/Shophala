@@ -414,24 +414,64 @@ Please confirm my order. Thank you!`;
                                     ))}
                                 </div>
 
-                                <div className="px-6 py-6 border-t border-white/10">
-                                    <div className="flex justify-between mb-4">
-                                        <span className="text-gray-400">Total</span>
-                                        <span className="font-bold text-xl">
-                                            ₦{finalTotal.toLocaleString()}
-                                        </span>
+                                    <div className="px-6 py-6 border-t border-white/10 flex flex-col gap-3">
+                                        {/* Promo Code in Cart */}
+                                        <div className="flex gap-2">
+                                            <input
+                                                placeholder="Have a promo code?"
+                                                value={promoCode}
+                                                onChange={(e) => setPromoCode(e.target.value.toUpperCase())}
+                                                className="flex-1 bg-white/5 border border-white/10 rounded-2xl px-4 py-3 text-white placeholder-gray-500 focus:outline-none focus:border-white/30 transition text-sm"
+                                            />
+                                            <button
+                                                onClick={handleApplyPromo}
+                                                className="bg-white/10 px-4 py-3 rounded-2xl text-sm font-semibold hover:bg-white/20 transition whitespace-nowrap"
+                                            >
+                                                Apply
+                                            </button>
+                                        </div>
+                                        {promoError && <p className="text-red-400 text-xs">{promoError}</p>}
+                                        {promoApplied && (
+                                            <p className="text-green-400 text-xs">
+                                                ✓ {promoApplied.type === "percent"
+                                                    ? `${promoApplied.discount}% discount applied!`
+                                                    : `₦${promoApplied.discount} discount applied!`}
+                                            </p>
+                                        )}
+
+                                        {/* Totals */}
+                                        {promoApplied && (
+                                            <div className="flex justify-between text-sm">
+                                                <span className="text-gray-400">Subtotal</span>
+                                                <span className="text-gray-400">₦{cartTotal.toLocaleString()}</span>
+                                            </div>
+                                        )}
+                                        {promoApplied && (
+                                            <div className="flex justify-between text-sm">
+                                                <span className="text-green-400">Discount</span>
+                                                <span className="text-green-400">
+                                                    -{promoApplied.type === "percent"
+                                                        ? `₦${discount.toLocaleString()} (${promoApplied.discount}%)`
+                                                        : `₦${discount.toLocaleString()}`}
+                                                </span>
+                                            </div>
+                                        )}
+                                        <div className="flex justify-between">
+                                            <span className="text-gray-400">Total</span>
+                                            <span className="font-bold text-xl">₦{finalTotal.toLocaleString()}</span>
+                                        </div>
+
+                                        <button
+                                            onClick={() => {
+                                                setShowCart(false);
+                                                setShowCheckout(true);
+                                            }}
+                                            className="w-full bg-green-500 text-white py-4 rounded-2xl font-semibold flex items-center justify-center gap-2 hover:scale-105 transition"
+                                        >
+                                            <MessageCircle size={20} />
+                                            Checkout via WhatsApp
+                                        </button>
                                     </div>
-                                    <button
-                                        onClick={() => {
-                                            setShowCart(false);
-                                            setShowCheckout(true);
-                                        }}
-                                        className="w-full bg-green-500 text-white py-4 rounded-2xl font-semibold flex items-center justify-center gap-2 hover:scale-105 transition"
-                                    >
-                                        <MessageCircle size={20} />
-                                        Checkout via WhatsApp
-                                    </button>
-                                </div>
                             </>
                         )}
                     </div>
