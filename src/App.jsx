@@ -56,7 +56,7 @@ export default function App() {
             <Settings />
           </ProtectedRoute>
         } />
-        <Route path="/promocodes" element={
+        <Route path="/promo-codes" element={
           <ProtectedRoute>
             <PromoCodes />
           </ProtectedRoute>
