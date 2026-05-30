@@ -226,11 +226,6 @@ export default function Dashboard() {
               Upgrade
             </Link>
           )}
-          {label="Refer & Earn" && (
-            <Link to="/referral" className="text-xs bg-yellow-500 text-black px-3 py-1.5 rounded-full font-semibold">
-              Refer 🎁
-            </Link>
-          )}
           <button onClick={() => setMobileMenuOpen(!mobileMenuOpen)}>
             {mobileMenuOpen ? <X size={24} /> : <Menu size={24} />}
           </button>
@@ -269,6 +264,7 @@ export default function Dashboard() {
             { label: "Analytics", href: "/analytics", icon: <BarChart3 size={18} className="text-gray-500" /> },
             { label: "Promo Codes", href: "/promo-codes", icon: <Tag size={18} className="text-gray-500" /> },
             { label: "Settings", href: "/settings", icon: <Settings size={18} className="text-gray-500" /> },
+            { label: "Refer & Earn", href: "/referral", icon: <Gift size={18} className="text-gray-500" /> },
           ].map((item) => (
             <Link
               key={item.label}
