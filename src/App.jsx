@@ -2,6 +2,7 @@ import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { useEffect, useState } from "react";
 import { onAuthStateChanged } from "firebase/auth";
 import { auth } from "./firebase";
+import { SpeedInsights } from "@vercel/speed-insights/react";
 
 import Home from "./pages/Home";
 import Storefront from "./pages/Storefront";
@@ -62,6 +63,7 @@ export default function App() {
           </ProtectedRoute>
         } />
       </Routes>
+      <SpeedInsights />
     </BrowserRouter>
   );
 }
