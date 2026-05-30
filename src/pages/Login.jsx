@@ -9,6 +9,7 @@ import {
 } from "firebase/auth";
 import { doc, setDoc, getDoc, updateDoc } from "firebase/firestore";
 import { auth, db } from "../firebase";
+import { analytics } from "../utils/analytics";
 import { ArrowRight, Eye, EyeOff } from "lucide-react";
 import emailjs from "@emailjs/browser";
 import Logo from "../components/Logo";
@@ -26,6 +27,9 @@ export default function Login() {
     const [verifyCode, setVerifyCode] = useState("");
     const [verifyUid, setVerifyUid] = useState("");
     const [verifying, setVerifying] = useState(false);
+    // Get referral code from URL
+    const urlParams = new URLSearchParams(window.location.search);
+    const refCode = urlParams.get("ref");
     const [form, setForm] = useState({
         name: "",
         email: "",
@@ -139,7 +143,7 @@ export default function Login() {
                 await signOut(auth);
                 setVerifyUid(cred.user.uid);
                 setVerificationSent(true);
-
+                analytics.signUp();
             } else {
                 const cred = await signInWithEmailAndPassword(
                     auth,
@@ -155,7 +159,13 @@ export default function Login() {
                     setLoading(false);
                     return;
                 }
-
+                // Track referral
+                if (refCode) {
+                    await updateDoc(doc(db, "vendors", cred.user.uid), {
+                        referredBy: refCode,
+                    });
+                }
+                analytics.signIn();
                 navigate("/dashboard");
             }
         } catch (err) {

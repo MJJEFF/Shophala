@@ -3,6 +3,8 @@ import { Link, useParams } from "react-router-dom";
 import { collection, getDocs, query, where, getDoc, doc, increment } from "firebase/firestore";
 import { db } from "../firebase";
 import PageLoader from "../components/PageLoader";
+import { analytics } from "../utils/analytics";
+
 import { ShoppingCart, Plus, Minus, X, MessageCircle, Store, Search, Share2 } from "lucide-react";
 
 export default function Storefront() {
@@ -44,6 +46,7 @@ export default function Storefront() {
                 if (vendorDoc.exists()) {
                     const vendorData = { id: vendorDoc.id, ...vendorDoc.data() };
                     setVendorData(vendorData);
+                    analytics.viewStore(vendor);
                     try {
                         const { updateDoc, increment } = await import("firebase/firestore");
                         await updateDoc(doc(db, "vendors", vendorData.id), {
@@ -73,6 +76,7 @@ export default function Storefront() {
 
                 const vendorData = { id: slugSnap.docs[0].id, ...slugSnap.docs[0].data() };
                 setVendorData(vendorData);
+                analytics.viewStore(vendor);
                 try {
                     const { updateDoc, increment } = await import("firebase/firestore");
                     await updateDoc(doc(db, "vendors", vendorData.id), {
@@ -113,10 +117,12 @@ export default function Storefront() {
                 );
             return [...prev, { ...product, qty: 1 }];
         });
+        analytics.addToCart(product.name, product.price);
     };
 
     const removeFromCart = (id) => {
         setCart((prev) => prev.filter((i) => i.id !== id));
+        analytics.removeFromCart(product.name, product.price);
     };
 
     const updateQty = (id, delta) => {
@@ -160,6 +166,8 @@ export default function Storefront() {
 
     const handleWhatsAppCheckout = () => {
         if (!customerForm.name || !customerForm.phone) return;
+        analytics.checkout(finalTotal);
+        analytics.purchase(finalTotal, cart.map(i => ({ name: i.name, qty: i.qty })));
 
         const itemsList = cart
             .map((i) => `• ${i.name} x${i.qty} — ₦${(i.price * i.qty).toLocaleString()}`)

@@ -17,6 +17,7 @@ import CookieBanner from "./components/CookieBanner";
 import NotFound from "./pages/NotFound";
 import ResetPassword from "./pages/ResetPassword";
 import SupportButton from "./components/SupportButton";
+import Referral from "./pages/Referral";
 
 function ProtectedRoute({ children }) {
   const [user, setUser] = useState(undefined);
@@ -63,6 +64,11 @@ export default function App() {
         <Route path="/promo-codes" element={
           <ProtectedRoute>
             <PromoCodes />
+          </ProtectedRoute>
+        } />
+        <Route path="/referral" element={
+          <ProtectedRoute>
+            <Referral />
           </ProtectedRoute>
         } />
         <Route path="/reset-password" element={<ResetPassword />} />

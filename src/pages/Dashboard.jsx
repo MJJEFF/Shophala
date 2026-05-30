@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import Logo from "../components/Logo";
+import { analytics } from "../utils/analytics";
 import PageLoader from "../components/PageLoader";
 import {
   collection,
@@ -145,6 +146,7 @@ export default function Dashboard() {
     } finally {
       setAddingProduct(false);
     }
+    analytics.addProduct();
   };
 
   const handleDelete = async (id) => {
@@ -155,6 +157,7 @@ export default function Dashboard() {
 
   const handleLogout = async () => {
     await signOut(auth);
+    analytics.signOut();
     navigate("/");
   };
 
@@ -171,6 +174,7 @@ export default function Dashboard() {
     navigator.clipboard.writeText(storeLink);
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
+    analytics.copyStoreLink();
   };
 
   const totalRevenue = orders.reduce((sum, o) => sum + (o.total || 0), 0);
@@ -204,6 +208,9 @@ export default function Dashboard() {
           <Link to="/analytics" className="text-gray-400 hover:text-white transition text-sm">Analytics</Link>
           <Link to="/promo-codes" className="text-gray-400 hover:text-white transition text-sm">Promos</Link>
           <Link to="/settings" className="text-gray-400 hover:text-white transition text-sm">Settings</Link>
+          <Link to="/referral" className="text-gray-400 hover:text-white transition text-sm">
+            Refer & Earn 🎁
+          </Link>
           <button
             onClick={handleLogout}
             className="flex items-center gap-2 text-gray-400 hover:text-white transition text-sm"
@@ -217,6 +224,11 @@ export default function Dashboard() {
           {plan === "free" && (
             <Link to="/pricing" className="text-xs bg-green-500 text-white px-3 py-1.5 rounded-full font-semibold">
               Upgrade
+            </Link>
+          )}
+          {label="Refer & Earn" && (
+            <Link to="/referral" className="text-xs bg-yellow-500 text-black px-3 py-1.5 rounded-full font-semibold">
+              Refer 🎁
             </Link>
           )}
           <button onClick={() => setMobileMenuOpen(!mobileMenuOpen)}>

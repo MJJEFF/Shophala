@@ -3,6 +3,7 @@ import { useParams, useNavigate } from "react-router-dom";
 import { doc, getDoc, getDocs, addDoc, collection, query, where } from "firebase/firestore";
 import { db } from "../firebase";
 import PageLoader from "../components/PageLoader";
+import { analytics } from "../utils/analytics";
 import { ArrowLeft, MessageCircle, ShoppingCart, Store, Share2, Star } from "lucide-react";
 
 export default function ProductDetail() {
@@ -55,6 +56,7 @@ export default function ProductDetail() {
                 }
 
                 setProduct({ id: productDoc.id, ...productDoc.data() });
+                analytics.viewProduct(productDoc.data().name, productDoc.data().price);
 
                 // Fetch reviews
                 const reviewSnap = await getDocs(
@@ -71,6 +73,7 @@ export default function ProductDetail() {
     }, [vendor, productId]);
 
     const handleWhatsApp = () => {
+        analytics.whatsappClick(product.name, product.price);
         const message = `Hello! I'd like to order this item from your Shophala store 🛍️
 
 *Product:* ${product.name}
@@ -231,6 +234,7 @@ Please confirm availability. Thank you!`;
                                             text: `Check out ${product.name} for ₦${Number(product.price).toLocaleString()} on ${vendorData.storeName}`,
                                             url,
                                         });
+                                        analytics.shareProduct(product.name);
                                     } else {
                                         navigator.clipboard.writeText(url);
                                         alert("Product link copied! Share it anywhere.");

@@ -2,6 +2,7 @@ import { Link } from "react-router-dom";
 import { Check, Zap, Building2, Rocket } from "lucide-react";
 import { useState, useEffect } from "react";
 import Logo from "../components/Logo";
+import { analytics } from "../utils/analytics";
 import { useFlutterwave, closePaymentModal } from "flutterwave-react-v3";
 import { onAuthStateChanged } from "firebase/auth";
 import { doc, setDoc } from "firebase/firestore";
@@ -117,6 +118,7 @@ function PayButton({ plan, yearly, user }) {
                             activatedAt: new Date(),
                             expiresAt: new Date(Date.now() + (yearly ? 365 : 30) * 24 * 60 * 60 * 1000),
                         });
+                        analytics.upgrade(plan.planId);
                         alert(`🎉 You are now on the ${plan.name} plan!`);
                         window.location.href = "/dashboard";
                     } catch (err) {
