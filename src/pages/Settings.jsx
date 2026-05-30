@@ -3,6 +3,7 @@ import { useNavigate, Link } from "react-router-dom";
 import { onAuthStateChanged } from "firebase/auth";
 import { doc, getDoc, updateDoc } from "firebase/firestore";
 import { auth, db } from "../firebase";
+import PageLoader from "../components/PageLoader";
 import { ArrowLeft, Save, Copy, Check } from "lucide-react";
 
 export default function Settings() {
@@ -102,11 +103,7 @@ export default function Settings() {
     };
 
     if (loading)
-        return (
-            <div className="min-h-screen bg-black text-white flex items-center justify-center">
-                <div className="w-8 h-8 border-2 border-white/20 border-t-white rounded-full animate-spin" />
-            </div>
-        );
+        return <PageLoader message="Loading settings..." />;
 
     return (
         <div className="min-h-screen bg-black text-white">

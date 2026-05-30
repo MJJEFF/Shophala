@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { Link, useParams } from "react-router-dom";
 import { collection, getDocs, query, where, getDoc, doc, increment } from "firebase/firestore";
 import { db } from "../firebase";
+import PageLoader from "../components/PageLoader";
 import { ShoppingCart, Plus, Minus, X, MessageCircle, Store, Search, Share2 } from "lucide-react";
 
 export default function Storefront() {
@@ -193,12 +194,7 @@ Please confirm my order. Thank you!`;
         );
     };
 
-    if (loading)
-        return (
-            <div className="min-h-screen bg-black text-white flex items-center justify-center">
-                <p className="text-gray-400 animate-pulse text-xl">Loading store...</p>
-            </div>
-        );
+    if (loading) return <PageLoader message="Loading store..." />;
 
     if (notFound)
         return (

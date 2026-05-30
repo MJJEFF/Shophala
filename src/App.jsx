@@ -16,6 +16,7 @@ import ProductDetail from "./pages/ProductDetail";
 import CookieBanner from "./components/CookieBanner";
 import NotFound from "./pages/NotFound";
 import ResetPassword from "./pages/ResetPassword";
+import SupportButton from "./components/SupportButton";
 
 function ProtectedRoute({ children }) {
   const [user, setUser] = useState(undefined);
@@ -68,6 +69,7 @@ export default function App() {
         <Route path="*" element={<NotFound />} />
       </Routes>
       <CookieBanner />
+      <SupportButton />
     </BrowserRouter>
   );
 }

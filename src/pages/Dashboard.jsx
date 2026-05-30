@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import Logo from "../components/Logo";
+import PageLoader from "../components/PageLoader";
 import {
   collection,
   addDoc,
@@ -174,13 +175,7 @@ export default function Dashboard() {
 
   const totalRevenue = orders.reduce((sum, o) => sum + (o.total || 0), 0);
 
-  if (loading)
-    return (
-      <div className="min-h-screen bg-black text-white flex flex-col items-center justify-center gap-4">
-        <div className="w-8 h-8 border-2 border-white/20 border-t-white rounded-full animate-spin" />
-        <p className="text-gray-400">Loading your store...</p>
-      </div>
-    );
+  if (loading) return <PageLoader message="Loading your store..." />;
 
   return (
     <div className="min-h-screen bg-black text-white">

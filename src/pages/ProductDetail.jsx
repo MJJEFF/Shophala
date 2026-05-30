@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { doc, getDoc, getDocs, addDoc, collection, query, where } from "firebase/firestore";
 import { db } from "../firebase";
+import PageLoader from "../components/PageLoader";
 import { ArrowLeft, MessageCircle, ShoppingCart, Store, Share2, Star } from "lucide-react";
 
 export default function ProductDetail() {
@@ -110,12 +111,7 @@ Please confirm availability. Thank you!`;
         ? (reviews.reduce((sum, r) => sum + r.rating, 0) / reviews.length).toFixed(1)
         : null;
 
-    if (loading)
-        return (
-            <div className="min-h-screen bg-black text-white flex items-center justify-center">
-                <div className="w-8 h-8 border-2 border-white/20 border-t-white rounded-full animate-spin" />
-            </div>
-        );
+    if (loading) return <PageLoader message="Loading product..." />;
 
     if (notFound)
         return (

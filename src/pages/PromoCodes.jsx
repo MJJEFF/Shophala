@@ -3,6 +3,7 @@ import { useNavigate, Link } from "react-router-dom";
 import { onAuthStateChanged } from "firebase/auth";
 import { collection, addDoc, getDocs, query, where, deleteDoc, doc } from "firebase/firestore";
 import { auth, db } from "../firebase";
+import PageLoader from "../components/PageLoader";
 import { ArrowLeft, Plus, Trash2, Tag } from "lucide-react";
 
 export default function PromoCodes() {
@@ -50,11 +51,7 @@ export default function PromoCodes() {
     };
 
     if (loading)
-        return (
-            <div className="min-h-screen bg-black text-white flex items-center justify-center">
-                <div className="w-8 h-8 border-2 border-white/20 border-t-white rounded-full animate-spin" />
-            </div>
-        );
+        return <PageLoader message="Loading promo codes..." />;
 
     return (
         <div className="min-h-screen bg-black text-white">

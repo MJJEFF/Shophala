@@ -132,6 +132,145 @@ export default function Home() {
                 </div>
             </section>
 
+            {/* Testimonials */}
+            <section className="px-6 md:px-12 pb-24">
+                <div className="max-w-6xl mx-auto">
+                    <div className="text-center mb-16">
+                        <p className="uppercase tracking-[0.3em] text-gray-500 mb-5 text-sm">Testimonials</p>
+                        <h2 className="text-3xl sm:text-4xl md:text-6xl font-bold">Vendors love Shophala</h2>
+                    </div>
+                    <div className="grid sm:grid-cols-2 md:grid-cols-3 gap-6">
+                        {[
+                            {
+                                name: "Amaka Obi",
+                                role: "Fashion Vendor, Lagos",
+                                avatar: "A",
+                                text: "Before Shophala I was sending my catalogue manually to every customer. Now they just click my link and order on WhatsApp. My sales doubled in 2 weeks!",
+                                stars: 5,
+                            },
+                            {
+                                name: "Chukwudi Eze",
+                                role: "Electronics Seller, Abuja",
+                                avatar: "C",
+                                text: "Very easy to set up. I added all my products in 30 minutes and shared my store link on my WhatsApp status. I got 3 orders the same day.",
+                                stars: 5,
+                            },
+                            {
+                                name: "Fatima Aliyu",
+                                role: "Food Vendor, Kano",
+                                avatar: "F",
+                                text: "My customers used to forget what they ordered. Now everything comes in a WhatsApp message automatically. Shophala is a game changer for my business.",
+                                stars: 5,
+                            },
+                            {
+                                name: "Tunde Adeyemi",
+                                role: "Shoe Vendor, Port Harcourt",
+                                avatar: "T",
+                                text: "I was skeptical at first but after setting up my store I realized this is exactly what Nigerian vendors need. Professional and affordable.",
+                                stars: 5,
+                            },
+                            {
+                                name: "Ngozi Nwosu",
+                                role: "Cosmetics Seller, Enugu",
+                                avatar: "N",
+                                text: "The promo code feature alone is worth it. I run discount campaigns and track everything. My customers think I'm running a big company now!",
+                                stars: 5,
+                            },
+                            {
+                                name: "Ibrahim Musa",
+                                role: "Groceries Vendor, Kaduna",
+                                avatar: "I",
+                                text: "Setup took less than 5 minutes. I had my store link ready to share the same day. The free plan is already better than anything I've tried before.",
+                                stars: 5,
+                            },
+                        ].map((t) => (
+                            <div
+                                key={t.name}
+                                className="bg-white/5 border border-white/10 rounded-[2rem] p-6 hover:bg-white/10 transition flex flex-col gap-4"
+                            >
+                                {/* Stars */}
+                                <div className="flex gap-1">
+                                    {[...Array(t.stars)].map((_, i) => (
+                                        <span key={i} className="text-yellow-400 text-lg">★</span>
+                                    ))}
+                                </div>
+                                {/* Text */}
+                                <p className="text-gray-300 leading-relaxed text-sm flex-1">
+                                    "{t.text}"
+                                </p>
+                                {/* Author */}
+                                <div className="flex items-center gap-3">
+                                    <div className="w-10 h-10 rounded-full bg-green-500/20 text-green-400 flex items-center justify-center font-bold text-sm flex-shrink-0">
+                                        {t.avatar}
+                                    </div>
+                                    <div>
+                                        <p className="font-semibold text-sm">{t.name}</p>
+                                        <p className="text-gray-500 text-xs">{t.role}</p>
+                                    </div>
+                                </div>
+                            </div>
+                        ))}
+                    </div>
+                </div>
+            </section>
+
+            {/* FAQ */}
+            <section className="px-6 md:px-12 pb-24 max-w-3xl mx-auto">
+                <div className="text-center mb-12">
+                    <p className="uppercase tracking-[0.3em] text-gray-500 mb-5 text-sm">FAQ</p>
+                    <h2 className="text-3xl sm:text-4xl font-bold">Frequently asked questions</h2>
+                </div>
+                <div className="flex flex-col gap-4">
+                    {[
+                        {
+                            q: "How do I create my store?",
+                            a: "Sign up with your email or Google account, add your products, and copy your store link. The whole process takes less than 5 minutes.",
+                        },
+                        {
+                            q: "Do my customers need to download an app?",
+                            a: "No. Your customers just click your store link in their browser, browse your products, and order directly through WhatsApp. No app download needed.",
+                        },
+                        {
+                            q: "How do I receive orders?",
+                            a: "When a customer checks out, a pre-filled WhatsApp message with their full order details is sent directly to your WhatsApp number automatically.",
+                        },
+                        {
+                            q: "Is Shophala free?",
+                            a: "Yes! The Starter plan is free forever with up to 10 products. Upgrade to Pro for unlimited products and advanced features.",
+                        },
+                        {
+                            q: "Can I use Shophala on my phone?",
+                            a: "Absolutely. Shophala is fully mobile-friendly and works perfectly on any smartphone or tablet.",
+                        },
+                        {
+                            q: "How do I get paid?",
+                            a: "You receive payment directly from your customers however you prefer — bank transfer, cash, POS, or mobile money. Shophala handles the ordering, you handle the payment.",
+                        },
+                        {
+                            q: "Can I create discount codes for my customers?",
+                            a: "Yes! Pro and Business plan vendors can create unlimited promo codes with percentage or fixed discounts.",
+                        },
+                        {
+                            q: "What if I have more questions?",
+                            a: "Chat with us on WhatsApp anytime. We typically respond within a few hours.",
+                        },
+                    ].map((faq) => (
+                        <details
+                            key={faq.q}
+                            className="bg-white/5 border border-white/10 rounded-2xl px-6 py-5 group cursor-pointer"
+                        >
+                            <summary className="font-semibold list-none flex items-center justify-between text-sm sm:text-base">
+                                {faq.q}
+                                <span className="text-gray-400 group-open:rotate-45 transition-transform duration-200 text-xl flex-shrink-0 ml-4">
+                                    +
+                                </span>
+                            </summary>
+                            <p className="text-gray-400 text-sm mt-4 leading-relaxed">{faq.a}</p>
+                        </details>
+                    ))}
+                </div>
+            </section>
+
             {/* Footer */}
             <footer className="border-t border-white/10 px-6 md:px-12 py-8 text-center text-gray-500 text-sm">
                 <div className="flex flex-col sm:flex-row items-center justify-center gap-2">

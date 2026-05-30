@@ -3,6 +3,7 @@ import { useNavigate, Link } from "react-router-dom";
 import { onAuthStateChanged } from "firebase/auth";
 import { collection, getDocs, query, where, getDoc, doc } from "firebase/firestore";
 import { auth, db } from "../firebase";
+import PageLoader from "../components/PageLoader";
 import { ArrowLeft, TrendingUp, ShoppingBag, Users, Package } from "lucide-react";
 import usePlan from "../hooks/usePlan";
 
@@ -47,12 +48,7 @@ export default function Analytics() {
         .sort((a, b) => b[1] - a[1])
         .slice(0, 5);
 
-    if (loading)
-        return (
-            <div className="min-h-screen bg-black text-white flex items-center justify-center">
-                <div className="w-8 h-8 border-2 border-white/20 border-t-white rounded-full animate-spin" />
-            </div>
-        );
+    if (loading) return <PageLoader message="Loading analytics..." />;
 
     if (plan === "free")
         return (
