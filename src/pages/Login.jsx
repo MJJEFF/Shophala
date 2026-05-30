@@ -388,6 +388,16 @@ export default function Login() {
                                 onChange={handleChange}
                                 className="w-full bg-white/5 border border-white/10 rounded-2xl px-5 py-4 text-white placeholder-gray-500 focus:outline-none focus:border-white/30 transition pr-14"
                             />
+                            
+                            <div className="text-right">
+                                <Link
+                                    to="/reset-password"
+                                    className="text-gray-400 hover:text-white text-sm transition"
+                                >
+                                    Forgot password?
+                                </Link>
+                            </div>
+                            
                             <button
                                 type="button"
                                 onClick={() => setShowPassword(!showPassword)}

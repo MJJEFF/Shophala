@@ -13,6 +13,9 @@ import Legal from "./pages/Legal";
 import PromoCodes from "./pages/PromoCodes";
 import Settings from "./pages/Settings";
 import ProductDetail from "./pages/ProductDetail";
+import CookieBanner from "./components/CookieBanner";
+import NotFound from "./pages/NotFound";
+import ResetPassword from "./pages/ResetPassword";
 
 function ProtectedRoute({ children }) {
   const [user, setUser] = useState(undefined);
@@ -61,7 +64,10 @@ export default function App() {
             <PromoCodes />
           </ProtectedRoute>
         } />
+        <Route path="/reset-password" element={<ResetPassword />} />
+        <Route path="*" element={<NotFound />} />
       </Routes>
+      <CookieBanner />
     </BrowserRouter>
   );
 }
