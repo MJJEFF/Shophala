@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { onAuthStateChanged } from "firebase/auth";
-import { doc, getDoc, updateDoc, getDocs, collection, query, where } from "firebase/firestore";
+import { doc, getDoc, updateDoc, getDocs, collection, query, where, setDoc } from "firebase/firestore";
 import { auth, db } from "../firebase";
 import { Copy, Check, Gift, Users, ArrowLeft } from "lucide-react";
 import Logo from "../components/Logo";
@@ -29,7 +29,26 @@ export default function Referral() {
                 const refSnap = await getDocs(
                     query(collection(db, "vendors"), where("referredBy", "==", u.uid))
                 );
-                setReferrals(refSnap.docs.map(d => ({ id: d.id, ...d.data() })));
+                const refs = refSnap.docs.map(d => ({ id: d.id, ...d.data() }));
+                setReferrals(refs);
+
+                // Auto-grant Pro if 3+ referrals and not already rewarded
+                if (refs.length >= 3 && !data.referralRewarded) {
+                    const expiresAt = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000);
+                    await setDoc(doc(db, "plans", u.uid), {
+                        plan: "pro",
+                        reference: "referral_reward",
+                        email: u.email,
+                        amount: 0,
+                        yearly: false,
+                        activatedAt: new Date(),
+                        expiresAt,
+                    });
+                    await updateDoc(doc(db, "vendors", u.uid), {
+                        referralRewarded: true,
+                    });
+                    alert("🎉 Congratulations! You've earned 1 month Pro free!");
+                }
             }
             setLoading(false);
         });

@@ -63,6 +63,19 @@ export default function Storefront() {
                     return;
                 }
 
+                // Always fetch plan separately for accuracy
+                try {
+                    const planDoc = await getDoc(doc(db, "plans", vendorData.id));
+                    if (planDoc.exists()) {
+                        const planData = planDoc.data();
+                        const expires = planData.expiresAt?.toDate();
+                        const activePlan = expires && expires < new Date() ? "free" : planData.plan;
+                        setVendorData(prev => ({ ...prev, plan: activePlan }));
+                    }
+                } catch (err) {
+                    console.log("Plan check failed silently");
+                }
+
                 // If not found by UID, try as slug
                 const slugSnap = await getDocs(
                     query(collection(db, "vendors"), where("slug", "==", vendor))
