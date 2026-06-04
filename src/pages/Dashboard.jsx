@@ -31,6 +31,7 @@ import {
   Menu,
   Settings,
   Tag,
+  Gift,
 } from "lucide-react";
 
 export default function Dashboard() {
@@ -168,7 +169,7 @@ export default function Dashboard() {
     );
   };
 
-  const storeLink = `${window.location.origin}/store/${vendor?.slug || user?.uid}`;
+  const storeLink = user ? `${window.location.origin}/store/${vendor?.slug || user?.uid}` : "";
 
   const copyLink = () => {
     navigator.clipboard.writeText(storeLink);
@@ -234,7 +235,7 @@ export default function Dashboard() {
 
       {/* Mobile Dropdown */}
       {mobileMenuOpen && (
-        <div className="md:hidden bg-black border-b border-white/10 px-6 py-4 flex flex-col gap-1 sticky top-[65px] z-30">
+        <div className="md:hidden fixed top-[65px] left-0 right-0 bg-black border-b border-white/10 px-6 py-4 flex flex-col gap-1 z-50">
           {/* Store info */}
           <div className="flex items-center justify-between py-3 border-b border-white/10 mb-2">
             <div>
