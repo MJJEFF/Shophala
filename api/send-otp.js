@@ -5,15 +5,9 @@ import { getFirestore, doc, setDoc } from "firebase/firestore";
 const resend = new Resend(process.env.RESEND_API_KEY || process.env.VITE_RESEND_API_KEY);
 
 const firebaseConfig = {
-<<<<<<< HEAD
   apiKey: process.env.FIREBASE_API_KEY,
   authDomain: process.env.FIREBASE_AUTH_DOMAIN,
   projectId: process.env.FIREBASE_PROJECT_ID,
-=======
-    apiKey: process.env.FIREBASE_API_KEY || process.env.VITE_FIREBASE_API_KEY,
-    authDomain: process.env.FIREBASE_AUTH_DOMAIN || process.env.VITE_FIREBASE_AUTH_DOMAIN,
-    projectId: process.env.FIREBASE_PROJECT_ID || process.env.VITE_FIREBASE_PROJECT_ID,
->>>>>>> 5bc458afd2ba0c52a7817fe08cd1be5193beadac
 };
 
 function getDb() {
