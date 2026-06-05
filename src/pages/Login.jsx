@@ -105,12 +105,20 @@ export default function Login() {
         }
         setLoading(true);
         try {
-            // Verify OTP
+            // Verify OTP via API
             const res = await fetch("/api/verify-otp", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({ email, code: otp }),
             });
+
+            if (!res.ok) {
+                const errorData = await res.json().catch(() => ({}));
+                setError(errorData.message || "Verification failed.");
+                setLoading(false);
+                return;
+            }
+
             const data = await res.json();
             if (!data.success) {
                 setError(data.message || "Invalid code.");
@@ -118,36 +126,72 @@ export default function Login() {
                 return;
             }
 
-            // Create or sign in Firebase user
+            // OTP verified — now handle Firebase auth
             const password = `shophala_${email}_secure_2025`;
 
             if (isNewUser) {
-                const cred = await createUserWithEmailAndPassword(auth, email, password);
-                await setDoc(doc(db, "vendors", cred.user.uid), {
-                    name,
-                    email,
-                    phone,
-                    uid: cred.user.uid,
-                    createdAt: new Date(),
-                    storeName: name + "'s Store",
-                    emailVerified: true,
-                    plan: "free",
-                    ...(refCode ? { referredBy: refCode } : {}),
-                });
-                analytics.signup("email_otp");
+                // Create new account
+                try {
+                    const cred = await createUserWithEmailAndPassword(auth, email, password);
+                    await setDoc(doc(db, "vendors", cred.user.uid), {
+                        name,
+                        email,
+                        phone,
+                        uid: cred.user.uid,
+                        createdAt: new Date(),
+                        storeName: name + "'s Store",
+                        emailVerified: true,
+                        plan: "free",
+                        ...(refCode ? { referredBy: refCode } : {}),
+                    });
+                    analytics.signup("email_otp");
+                    navigate("/dashboard");
+                } catch (err) {
+                    if (err.code === "auth/email-already-in-use") {
+                        // Account exists but not in vendors — sign in instead
+                        try {
+                            await signInWithEmailAndPassword(auth, email, password);
+                            analytics.login("email_otp");
+                            navigate("/dashboard");
+                        } catch {
+                            setError("Account exists but login failed. Please contact support.");
+                        }
+                    } else {
+                        throw err;
+                    }
+                }
             } else {
-                await signInWithEmailAndPassword(auth, email, password);
-                analytics.login("email_otp");
+                // Existing user — try signing in
+                try {
+                    await signInWithEmailAndPassword(auth, email, password);
+                    analytics.login("email_otp");
+                    navigate("/dashboard");
+                } catch (signInErr) {
+                    // Password mismatch — user was created with old system
+                    // Use Firebase Admin to reset OR use email link
+                    if (signInErr.code === "auth/wrong-password" || signInErr.code === "auth/invalid-credential") {
+                        // Call our reset endpoint
+                        const resetRes = await fetch("/api/reset-password", {
+                            method: "POST",
+                            headers: { "Content-Type": "application/json" },
+                            body: JSON.stringify({ email, newPassword: password }),
+                        });
+                        const resetData = await resetRes.json();
+                        if (resetData.success) {
+                            await signInWithEmailAndPassword(auth, email, password);
+                            analytics.login("email_otp");
+                            navigate("/dashboard");
+                        } else {
+                            setError("Login failed. Please contact support on WhatsApp.");
+                        }
+                    } else {
+                        throw signInErr;
+                    }
+                }
             }
-
-            navigate("/dashboard");
         } catch (err) {
-            console.error(err);
-            if (err.code === "auth/user-not-found" || err.code === "auth/wrong-password") {
-                setError("Account issue. Please contact support.");
-            } else {
-                setError("Something went wrong. Please try again.");
-            }
+            console.error("Verify OTP error:", err);
+            setError("Something went wrong. Please try again.");
         }
         setLoading(false);
     };
