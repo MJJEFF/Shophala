@@ -36,7 +36,7 @@ export default function Login() {
         }
         setLoading(true);
         try {
-            // Check if vendor exists in Firestore directly
+            // Check if user exists directly from Firestore
             const { getDocs, collection, query, where } = await import("firebase/firestore");
             const snap = await getDocs(
                 query(collection(db, "vendors"), where("email", "==", email))
@@ -44,23 +44,29 @@ export default function Login() {
             const exists = !snap.empty;
             setIsNewUser(!exists);
 
-            // Send OTP
+            // Send OTP via API
             const res = await fetch("/api/send-otp", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({ email, name: "" }),
             });
-            const data = await res.json();
-            if (!data.success) throw new Error(data.error);
 
-            if (!exists) {
-                setStep("name");
-            } else {
-                setStep("otp");
+            if (!res.ok) {
+                const errorData = await res.json().catch(() => ({}));
+                throw new Error(errorData.error || `Server error: ${res.status}`);
             }
+
+            const data = await res.json();
+            if (!data.success) throw new Error(data.error || "Failed to send code");
+
+            setStep(exists ? "otp" : "name");
         } catch (err) {
-            console.error(err);
-            setError("Failed to send code. Please try again.");
+            console.error("Send OTP error:", err);
+            if (err.message.includes("fetch")) {
+                setError("Network error. Please check your connection.");
+            } else {
+                setError(err.message || "Failed to send code. Please try again.");
+            }
         }
         setLoading(false);
     };

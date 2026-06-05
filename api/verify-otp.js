@@ -1,4 +1,4 @@
-import { initializeApp, getApps } from "firebase/app";
+import { initializeApp, getApps, getApp } from "firebase/app";
 import { getFirestore, doc, getDoc, deleteDoc, updateDoc, increment } from "firebase/firestore";
 
 const firebaseConfig = {
@@ -7,10 +7,19 @@ const firebaseConfig = {
     projectId: process.env.FIREBASE_PROJECT_ID,
 };
 
-const app = getApps().length === 0 ? initializeApp(firebaseConfig) : getApps()[0];
-const db = getFirestore(app);
+function getDb() {
+    const app = getApps().length === 0
+        ? initializeApp(firebaseConfig)
+        : getApp();
+    return getFirestore(app);
+}
 
 export default async function handler(req, res) {
+    res.setHeader("Access-Control-Allow-Origin", "*");
+    res.setHeader("Access-Control-Allow-Methods", "POST, OPTIONS");
+    res.setHeader("Access-Control-Allow-Headers", "Content-Type");
+
+    if (req.method === "OPTIONS") return res.status(200).end();
     if (req.method !== "POST") {
         return res.status(405).json({ error: "Method not allowed" });
     }
@@ -22,6 +31,7 @@ export default async function handler(req, res) {
             return res.status(400).json({ success: false, message: "Email and code required" });
         }
 
+        const db = getDb();
         const otpRef = doc(db, "otpCodes", email);
         const snap = await getDoc(otpRef);
 
@@ -31,25 +41,21 @@ export default async function handler(req, res) {
 
         const data = snap.data();
 
-        // Check attempts
         if (data.attempts >= 5) {
             await deleteDoc(otpRef);
             return res.status(400).json({ success: false, message: "Too many attempts. Please request a new code." });
         }
 
-        // Check expiry
         if (Date.now() > data.expiresAt) {
             await deleteDoc(otpRef);
             return res.status(400).json({ success: false, message: "Code expired. Please request a new one." });
         }
 
-        // Check code
         if (data.code !== code) {
             await updateDoc(otpRef, { attempts: increment(1) });
             return res.status(400).json({ success: false, message: "Wrong code. Please try again." });
         }
 
-        // Success — delete OTP
         await deleteDoc(otpRef);
         return res.status(200).json({ success: true });
 
