@@ -36,14 +36,13 @@ export default function Login() {
         }
         setLoading(true);
         try {
-            // Check if user exists
-            const methods = await fetch("/api/check-user", {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ email }),
-            });
-            const userData = await methods.json();
-            setIsNewUser(!userData.exists);
+            // Check if vendor exists in Firestore directly
+            const { getDocs, collection, query, where } = await import("firebase/firestore");
+            const snap = await getDocs(
+                query(collection(db, "vendors"), where("email", "==", email))
+            );
+            const exists = !snap.empty;
+            setIsNewUser(!exists);
 
             // Send OTP
             const res = await fetch("/api/send-otp", {
@@ -54,12 +53,13 @@ export default function Login() {
             const data = await res.json();
             if (!data.success) throw new Error(data.error);
 
-            if (!userData.exists) {
+            if (!exists) {
                 setStep("name");
             } else {
                 setStep("otp");
             }
         } catch (err) {
+            console.error(err);
             setError("Failed to send code. Please try again.");
         }
         setLoading(false);
