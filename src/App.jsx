@@ -13,6 +13,8 @@ import Legal from "./pages/Legal";
 import Analytics from "./pages/Analytics";
 import Settings from "./pages/Settings";
 import PromoCodes from "./pages/PromoCodes";
+import Orders from "./pages/Orders";
+import Customers from "./pages/Customers";
 import ProductDetail from "./pages/ProductDetail";
 import ResetPassword from "./pages/ResetPassword";
 import Referral from "./pages/Referral";
@@ -50,6 +52,8 @@ export default function App() {
           <Route path="/legal" element={<Legal />} />
           <Route path="/reset-password" element={<ResetPassword />} />
           <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
+          <Route path="/orders" element={<ProtectedRoute><Orders /></ProtectedRoute>} />
+          <Route path="/customers" element={<ProtectedRoute><Customers /></ProtectedRoute>} />
           <Route path="/analytics" element={<ProtectedRoute><Analytics /></ProtectedRoute>} />
           <Route path="/settings" element={<ProtectedRoute><Settings /></ProtectedRoute>} />
           <Route path="/promo-codes" element={<ProtectedRoute><PromoCodes /></ProtectedRoute>} />

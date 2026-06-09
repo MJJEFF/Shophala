@@ -12,6 +12,9 @@ export default function Settings() {
     const [saving, setSaving] = useState(false);
     const [saved, setSaved] = useState(false);
     const [copied, setCopied] = useState(false);
+    const [logoFile, setLogoFile] = useState(null);
+    const [logoPreview, setLogoPreview] = useState("");
+    const [uploadingLogo, setUploadingLogo] = useState(false);
     const [form, setForm] = useState({
         name: "",
         storeName: "",
@@ -19,6 +22,7 @@ export default function Settings() {
         email: "",
         storeDescription: "",
         slug: "",
+        logo: "",
     });
     const navigate = useNavigate();
 
@@ -36,6 +40,7 @@ export default function Settings() {
                     email: data.email || "",
                     storeDescription: data.storeDescription || "",
                     slug: data.slug || "",
+                    logo: data.logo || "",
                 });
             }
             setLoading(false);
@@ -55,6 +60,24 @@ export default function Settings() {
             .replace(/[^a-z0-9-]/g, "-")
             .replace(/-+/g, "-")
             .replace(/^-|-$/g, "");
+
+        let logoUrl = form.logo;
+        if (logoFile) {
+            setUploadingLogo(true);
+            try {
+                const formData = new FormData();
+                formData.append("image", logoFile);
+                const res = await fetch(
+                    `https://api.imgbb.com/1/upload?key=${import.meta.env.VITE_IMGBB_API_KEY}`,
+                    { method: "POST", body: formData }
+                );
+                const data = await res.json();
+                if (data.success) logoUrl = data.data.display_url;
+            } catch (err) {
+                console.error("Logo upload failed:", err);
+            }
+            setUploadingLogo(false);
+        }
 
         if (cleanSlug && cleanSlug.length < 3) {
             alert("Store URL must be at least 3 characters.");
@@ -83,8 +106,11 @@ export default function Settings() {
                 phone: form.phone,
                 storeDescription: form.storeDescription,
                 slug: cleanSlug,
+                logo: logoUrl,
                 updatedAt: new Date(),
             });
+            setForm((prev) => ({ ...prev, logo: logoUrl }));
+            setLogoFile(null);
             setSaved(true);
             setTimeout(() => setSaved(false), 3000);
         } catch (err) {
@@ -156,6 +182,35 @@ export default function Settings() {
                         />
                     </div>
 
+                    {/* Logo Upload */}
+                    <div>
+                        <label className="block text-gray-400 text-sm mb-2">Store Logo</label>
+                        <div className="flex items-center gap-4">
+                            <div className="w-16 h-16 rounded-2xl bg-white/5 border border-white/10 flex items-center justify-center overflow-hidden flex-shrink-0">
+                                {logoPreview || form.logo ? (
+                                    <img src={logoPreview || form.logo} alt="logo" className="w-full h-full object-cover" />
+                                ) : (
+                                    <span className="text-gray-600 text-2xl font-bold">
+                                        {form.storeName?.[0]?.toUpperCase() || "S"}
+                                    </span>
+                                )}
+                            </div>
+                            <div className="flex-1">
+                                <input
+                                    type="file"
+                                    accept="image/*"
+                                    onChange={async (e) => {
+                                        const file = e.target.files[0];
+                                        if (!file) return;
+                                        setLogoFile(file);
+                                        setLogoPreview(URL.createObjectURL(file));
+                                    }}
+                                    className="w-full text-gray-400 text-sm file:mr-3 file:py-2 file:px-4 file:rounded-xl file:border-0 file:bg-white/10 file:text-white hover:file:bg-white/20 transition cursor-pointer"
+                                />
+                                <p className="text-gray-500 text-xs mt-1">PNG, JPG up to 2MB. Square image recommended.</p>
+                            </div>
+                        </div>
+                    </div>
                     <div>
                         <label className="block text-gray-400 text-sm mb-2">
                             Store Name <span className="text-red-400">*</span>

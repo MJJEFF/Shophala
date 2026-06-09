@@ -33,8 +33,8 @@ const plans = [
     {
         name: "Pro",
         icon: <Rocket size={28} />,
-        monthly: 10000,
-        yearly: 96000,
+        monthly: 2000,
+        yearly: 19200,
         description: "For serious vendors ready to scale.",
         color: "border-white",
         badge: "Most Popular",
@@ -54,8 +54,8 @@ const plans = [
     {
         name: "Business",
         icon: <Building2 size={28} />,
-        monthly: 25000,
-        yearly: 240000,
+        monthly: 5000,
+        yearly: 48000,
         description: "For teams and high-volume businesses.",
         color: "border-white/10",
         badge: null,

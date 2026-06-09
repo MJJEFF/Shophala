@@ -54,6 +54,7 @@ export default function Dashboard() {
     price: "",
     description: "",
     category: "",
+    stock: "",
   });
   const navigate = useNavigate();
 
@@ -131,13 +132,14 @@ export default function Dashboard() {
         price: Number(form.price),
         description: form.description,
         category: form.category,
+        stock: form.stock ? Number(form.stock) : null,
         image: imageUrl,
         vendorId: user.uid,
         createdAt: new Date(),
       };
       const docRef = await addDoc(collection(db, "products"), newProduct);
       setProducts((prev) => [...prev, { id: docRef.id, ...newProduct }]);
-      setForm({ name: "", price: "", description: "", category: "" });
+      setForm({ name: "", price: "", description: "", category: "", stock: "" });
       setImageFile(null);
       setUploadProgress(0);
       setShowAddProduct(false);
@@ -207,6 +209,8 @@ export default function Dashboard() {
             </Link>
           )}
           <Link to="/analytics" className="text-gray-400 hover:text-white transition text-sm">Analytics</Link>
+          <Link to="/orders" className="text-gray-400 hover:text-white transition text-sm">Orders</Link>
+          <Link to="/customers" className="text-gray-400 hover:text-white transition text-sm">Customers</Link>
           <Link to="/promo-codes" className="text-gray-400 hover:text-white transition text-sm">Promos</Link>
           <Link to="/settings" className="text-gray-400 hover:text-white transition text-sm">Settings</Link>
           <Link to="/referral" className="text-gray-400 hover:text-white transition text-sm">
@@ -263,6 +267,8 @@ export default function Dashboard() {
           {/* Links */}
           {[
             { label: "Analytics", href: "/analytics", icon: <BarChart3 size={18} className="text-gray-500" /> },
+            { label: "Orders", href: "/orders", icon: <ShoppingBag size={18} className="text-gray-500" /> },
+            { label: "Customers", href: "/customers", icon: <Users size={18} className="text-gray-500" /> },
             { label: "Promo Codes", href: "/promo-codes", icon: <Tag size={18} className="text-gray-500" /> },
             { label: "Settings", href: "/settings", icon: <Settings size={18} className="text-gray-500" /> },
             { label: "Refer & Earn", href: "/referral", icon: <Gift size={18} className="text-gray-500" /> },
@@ -412,6 +418,9 @@ export default function Dashboard() {
                     >
                       {p.outOfStock ? "Out of Stock" : "In Stock"}
                     </button>
+                    {p.stock !== null && p.stock !== undefined && (
+                      <p className="text-sm text-gray-300 mb-3">Stock: <span className="font-semibold text-white">{p.stock} left</span></p>
+                    )}
                     <div className="flex items-center justify-between">
                       <p className="text-green-400 font-bold">₦{Number(p.price).toLocaleString()}</p>
                       <button onClick={() => handleDelete(p.id)} className="text-red-400 hover:text-red-300 transition">
@@ -516,6 +525,14 @@ export default function Dashboard() {
                 placeholder="Category (e.g. Shoes, Food)"
                 value={form.category}
                 onChange={(e) => setForm({ ...form, category: e.target.value })}
+                className="bg-white/5 border border-white/10 rounded-2xl px-5 py-4 text-white placeholder-gray-500 focus:outline-none focus:border-white/30 transition"
+              />
+              <input
+                name="stock"
+                type="number"
+                placeholder="Stock quantity (e.g. 50)"
+                value={form.stock}
+                onChange={(e) => setForm({ ...form, stock: e.target.value })}
                 className="bg-white/5 border border-white/10 rounded-2xl px-5 py-4 text-white placeholder-gray-500 focus:outline-none focus:border-white/30 transition"
               />
               <textarea

@@ -230,9 +230,27 @@ Please confirm my order. Thank you!`;
         <div className="min-h-screen bg-black text-white">
             {/* Store Header */}
             <div className="border-b border-white/10 px-6 md:px-12 py-6 flex items-center justify-between">
-                <div>
-                    <h1 className="text-2xl font-bold">{vendorData?.storeName}</h1>
-                    <p className="text-gray-400 text-sm mt-1">Powered by Shophala</p>
+                <div className="flex items-center gap-4">
+                    {vendorData?.logo ? (
+                        <img
+                            src={vendorData.logo}
+                            alt={vendorData.storeName}
+                            className="w-12 h-12 rounded-xl object-cover"
+                        />
+                    ) : (
+                        <div className="w-12 h-12 rounded-xl bg-green-500/20 flex items-center justify-center text-green-400 font-bold text-xl">
+                            {vendorData?.storeName?.[0]?.toUpperCase()}
+                        </div>
+                    )}
+                    <div>
+                        <h1 className="text-2xl font-bold">{vendorData?.storeName}</h1>
+                        {vendorData?.storeDescription && (
+                            <p className="text-gray-400 text-sm mt-0.5">{vendorData.storeDescription}</p>
+                        )}
+                        {vendorData?.plan !== "pro" && vendorData?.plan !== "business" && (
+                            <p className="text-gray-600 text-xs mt-0.5">Powered by Shophala</p>
+                        )}
+                    </div>
                 </div>
                 <button
                     onClick={() => setShowCart(true)}
